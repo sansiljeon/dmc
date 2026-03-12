@@ -58,7 +58,6 @@ async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
     await put(BLOB_PORTFOLIO_PATH, payload, {
       access: "public",
       addRandomSuffix: false,
-      allowOverwrite: true,
     });
     return;
   }
