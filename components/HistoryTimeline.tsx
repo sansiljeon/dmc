@@ -1,5 +1,5 @@
 "use client";
-// vercel deploy check
+// vercel deploy check · commit verification
 
 import ScrollAnimation from "./ScrollAnimation";
 
