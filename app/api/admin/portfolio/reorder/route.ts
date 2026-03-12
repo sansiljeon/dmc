@@ -22,6 +22,6 @@ export async function POST(request: NextRequest) {
   const orderedIds = Array.isArray(body.orderedIds)
     ? (body.orderedIds as string[]).filter((id) => typeof id === "string")
     : [];
-  reorderPortfolioItems(category, orderedIds);
+  await reorderPortfolioItems(category, orderedIds);
   return Response.json({ ok: true });
 }

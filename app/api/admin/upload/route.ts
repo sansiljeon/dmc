@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import fs from "fs";
+import { put } from "@vercel/blob";
 import path from "path";
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "images", "uploads");
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const FILE_TYPES = [
@@ -52,13 +50,19 @@ export async function POST(request: NextRequest) {
     );
   }
   const ext = path.extname(file.name) || DEFAULT_EXT[file.type] || ".bin";
-  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  const pathname = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
+
+  try {
+    const blob = await put(pathname, file, {
+      access: "public",
+      addRandomSuffix: true,
+    });
+    return Response.json({ url: blob.url });
+  } catch (err) {
+    console.error("Vercel Blob upload error:", err);
+    return Response.json(
+      { error: "파일 업로드에 실패했습니다. BLOB_READ_WRITE_TOKEN 환경 변수를 확인하세요." },
+      { status: 500 }
+    );
   }
-  const filePath = path.join(UPLOAD_DIR, name);
-  const bytes = await file.arrayBuffer();
-  fs.writeFileSync(filePath, Buffer.from(bytes));
-  const url = `/images/uploads/${name}`;
-  return Response.json({ url });
 }

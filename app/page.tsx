@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
-  const { items: portfolioItems } = getPortfolioItems({
+export default async function Home() {
+  const { items: portfolioItems } = await getPortfolioItems({
     page: 1,
     limit: 6,
     orderBy: "newest",

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { list, put } from "@vercel/blob";
 
 export interface PortfolioItem {
   id: string;
@@ -16,8 +17,9 @@ export interface PortfolioItem {
 }
 
 const portfolioPath = path.join(process.cwd(), "content/portfolio-items.json");
+const BLOB_PORTFOLIO_PATH = "portfolio-items.json";
 
-function readPortfolio(): { items: PortfolioItem[] } {
+function readPortfolioSync(): { items: PortfolioItem[] } {
   if (!fs.existsSync(portfolioPath)) {
     return { items: [] };
   }
@@ -29,14 +31,52 @@ function readPortfolio(): { items: PortfolioItem[] } {
   }
 }
 
-export function getPortfolioItems(options?: {
+/** Vercel Blob 또는 로컬 파일에서 포트폴리오 읽기 */
+async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const { blobs } = await list({ prefix: BLOB_PORTFOLIO_PATH });
+      const blob = blobs.find((b) => b.pathname === BLOB_PORTFOLIO_PATH);
+      if (blob?.url) {
+        const res = await fetch(blob.url);
+        if (res.ok) {
+          const data = (await res.json()) as { items: PortfolioItem[] };
+          return Array.isArray(data.items) ? data : { items: [] };
+        }
+      }
+    } catch {
+      // Blob 읽기 실패 시 파일로 폴백
+    }
+  }
+  return readPortfolioSync();
+}
+
+/** Vercel Blob 또는 로컬 파일에 포트폴리오 쓰기 */
+async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
+  const payload = JSON.stringify({ items }, null, 2);
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    await put(BLOB_PORTFOLIO_PATH, payload, {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+    return;
+  }
+  const dir = path.dirname(portfolioPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(portfolioPath, payload, "utf8");
+}
+
+export async function getPortfolioItems(options?: {
   page?: number;
   limit?: number;
   category?: "domestic" | "overseas";
   orderBy?: "newest" | "oldest";
   search?: string;
-}): { items: PortfolioItem[]; total: number } {
-  const data = readPortfolio();
+}): Promise<{ items: PortfolioItem[]; total: number }> {
+  const data = await readPortfolioAsync();
   let items = [...data.items];
   if (options?.category) {
     items = items.filter((i) => i.category === options.category);
@@ -61,33 +101,25 @@ export function getPortfolioItems(options?: {
   return { items, total };
 }
 
-export function getPortfolioItem(id: string): PortfolioItem | null {
-  const data = readPortfolio();
+export async function getPortfolioItem(id: string): Promise<PortfolioItem | null> {
+  const data = await readPortfolioAsync();
   return data.items.find((i) => i.id === id) ?? null;
 }
 
-export function writePortfolioItems(items: PortfolioItem[]): void {
-  const dir = path.dirname(portfolioPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(
-    portfolioPath,
-    JSON.stringify({ items }, null, 2),
-    "utf8"
-  );
+export async function writePortfolioItems(items: PortfolioItem[]): Promise<void> {
+  await writePortfolioItemsAsync(items);
 }
 
 /** 해당 카테고리 내 표시 순서를 orderedIds 순서로 저장 */
-export function reorderPortfolioItems(
+export async function reorderPortfolioItems(
   category: "domestic" | "overseas",
   orderedIds: string[]
-): void {
-  const data = readPortfolio();
+): Promise<void> {
+  const data = await readPortfolioAsync();
   const idToOrder = new Map(orderedIds.map((id, i) => [id, i]));
   const items = data.items.map((item) => {
     if (item.category !== category) return item;
     return { ...item, order: idToOrder.get(item.id) ?? 999999 };
   });
-  writePortfolioItems(items);
+  await writePortfolioItemsAsync(items);
 }

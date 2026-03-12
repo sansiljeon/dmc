@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     | "overseas"
     | null;
   const search = searchParams.get("search") ?? undefined;
-  const { items, total } = getPortfolioItems({
+  const { items, total } = await getPortfolioItems({
     page,
     limit,
     category: category || undefined,
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     return e as Response;
   }
-  const { items, total } = getPortfolioItems();
+  const { items, total } = await getPortfolioItems();
   if (total >= MAX_ITEMS) {
     return Response.json(
       { error: `포트폴리오는 최대 ${MAX_ITEMS}개까지 등록 가능합니다.` },
@@ -67,6 +67,6 @@ export async function POST(request: NextRequest) {
     address: body.address,
     createdAt: body.createdAt ?? new Date().toISOString(),
   };
-  writePortfolioItems([...items, newItem]);
+  await writePortfolioItems([...items, newItem]);
   return Response.json(newItem);
 }

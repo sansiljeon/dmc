@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return e as Response;
   }
-  const { items } = getPortfolioItems();
+  const { items } = await getPortfolioItems();
   const json = JSON.stringify({ items }, null, 2);
   const filename = `portfolio-items-backup-${new Date().toISOString().slice(0, 10)}.json`;
   return new Response(json, {
@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
     category: x.category,
     address: x.address,
     createdAt: x.createdAt,
+    order: (x as PortfolioItem).order,
   }));
-  writePortfolioItems(items);
+  await writePortfolioItems(items);
   return Response.json({ ok: true, count: items.length });
 }

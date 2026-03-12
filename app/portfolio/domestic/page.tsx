@@ -22,7 +22,7 @@ type Props = { searchParams?: Promise<{ page?: string }> | { page?: string } };
 export default async function PortfolioDomesticPage(props: Props) {
   const searchParams = await Promise.resolve(props.searchParams ?? {});
   const page = Math.max(1, parseInt(String(searchParams?.page ?? "1"), 10) || 1);
-  const { items, total } = getPortfolioItems({
+  const { items, total } = await getPortfolioItems({
     category: "domestic",
     page,
     limit: PER_PAGE,
