@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import { list, put } from "@vercel/blob";
+import { sql } from "@vercel/postgres";
 
 export interface PortfolioItem {
   id: string;
@@ -16,70 +14,48 @@ export interface PortfolioItem {
   order?: number;
 }
 
-const portfolioPath = path.join(process.cwd(), "content/portfolio-items.json");
-const BLOB_PORTFOLIO_PATH = "portfolio-items.json";
+let schemaReadyPromise: Promise<void> | null = null;
 
-/** Blob URL 캐시: list() 생략으로 읽기 1회 절약 (서버리스 인스턴스 내에서만 유효) */
-let cachedBlobUrl: string | null = null;
-
-function readPortfolioSync(): { items: PortfolioItem[] } {
-  if (!fs.existsSync(portfolioPath)) {
-    return { items: [] };
+async function ensurePortfolioSchema(): Promise<void> {
+  if (!schemaReadyPromise) {
+    schemaReadyPromise = (async () => {
+      await sql`
+        create table if not exists portfolio_items (
+          id text primary key,
+          title text not null,
+          description text not null,
+          image text not null,
+          image_alt text,
+          category text not null check (category in ('domestic','overseas')),
+          address text,
+          created_at timestamptz not null,
+          "order" integer
+        );
+      `;
+      await sql`
+        create index if not exists portfolio_items_category_order_idx
+          on portfolio_items (category, "order" nulls last, created_at desc);
+      `;
+    })();
   }
-  const raw = fs.readFileSync(portfolioPath, "utf8");
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return { items: [] };
-  }
+  await schemaReadyPromise;
 }
 
-/** Vercel Blob 또는 로컬 파일에서 포트폴리오 읽기 (캐시된 URL이 있으면 list 생략) */
-async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    try {
-      if (cachedBlobUrl) {
-        const res = await fetch(cachedBlobUrl, { cache: "no-store" });
-        if (res.ok) {
-          const data = (await res.json()) as { items: PortfolioItem[] };
-          return Array.isArray(data.items) ? data : { items: [] };
-        }
-        cachedBlobUrl = null;
-      }
-      const { blobs } = await list({ prefix: BLOB_PORTFOLIO_PATH, limit: 5 });
-      const blob = blobs.find((b) => b.pathname === BLOB_PORTFOLIO_PATH);
-      if (blob?.url) {
-        cachedBlobUrl = blob.url;
-        const res = await fetch(blob.url, { cache: "no-store" });
-        if (res.ok) {
-          const data = (await res.json()) as { items: PortfolioItem[] };
-          return Array.isArray(data.items) ? data : { items: [] };
-        }
-      }
-    } catch {
-      cachedBlobUrl = null;
-    }
-  }
-  return readPortfolioSync();
-}
-
-/** Vercel Blob 또는 로컬 파일에 포트폴리오 쓰기 (쓰기 후 URL 캐시 갱신으로 다음 읽기 가속) */
-async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
-  const payload = JSON.stringify({ items });
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const result = await put(BLOB_PORTFOLIO_PATH, payload, {
-      access: "public",
-      addRandomSuffix: false,
-      cacheControlMaxAge: 0,
-    });
-    cachedBlobUrl = result.url;
-    return;
-  }
-  const dir = path.dirname(portfolioPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(portfolioPath, payload, "utf8");
+function rowToItem(row: any): PortfolioItem {
+  return {
+    id: String(row.id),
+    title: String(row.title ?? ""),
+    description: String(row.description ?? ""),
+    image: String(row.image ?? ""),
+    imageAlt: row.image_alt ?? undefined,
+    category: row.category as "domestic" | "overseas",
+    address: row.address ?? undefined,
+    createdAt:
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : String(row.created_at ?? new Date().toISOString()),
+    order: row.order ?? undefined,
+  };
 }
 
 export async function getPortfolioItems(options?: {
@@ -89,38 +65,198 @@ export async function getPortfolioItems(options?: {
   orderBy?: "newest" | "oldest";
   search?: string;
 }): Promise<{ items: PortfolioItem[]; total: number }> {
-  const data = await readPortfolioAsync();
-  let items = [...data.items];
-  if (options?.category) {
-    items = items.filter((i) => i.category === options.category);
-  }
-  if (options?.search?.trim()) {
-    const q = options.search.trim().toLowerCase();
-    items = items.filter((i) => i.title.toLowerCase().includes(q));
-  }
+  await ensurePortfolioSchema();
+  const page = options?.page;
+  const limit = options?.limit;
+  const category = options?.category;
+  const search = options?.search?.trim() ? options.search.trim() : null;
   const orderBy = options?.orderBy ?? "newest";
-  items.sort((a, b) => {
-    const orderA = a.order ?? Infinity;
-    const orderB = b.order ?? Infinity;
-    if (orderA !== orderB) return orderA - orderB;
-    const t = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    return orderBy === "newest" ? -t : t;
-  });
-  const total = items.length;
-  if (options?.page != null && options?.limit != null) {
-    const start = (options.page - 1) * options.limit;
-    items = items.slice(start, start + options.limit);
-  }
-  return { items, total };
+  const offset = page != null && limit != null ? (page - 1) * limit : null;
+
+  const ilike = search ? `%${search}%` : null;
+  const newest = orderBy === "newest";
+
+  const countRes = category && ilike
+    ? await sql`select count(*)::int as count from portfolio_items where category = ${category} and title ilike ${ilike};`
+    : category
+      ? await sql`select count(*)::int as count from portfolio_items where category = ${category};`
+      : ilike
+        ? await sql`select count(*)::int as count from portfolio_items where title ilike ${ilike};`
+        : await sql`select count(*)::int as count from portfolio_items;`;
+
+  const total = countRes.rows[0]?.count ?? 0;
+
+  // list rows (with optional pagination)
+  const rowsRes = (() => {
+    if (offset != null && limit != null) {
+      if (category && ilike) {
+        return newest
+          ? sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where category = ${category} and title ilike ${ilike}
+              order by "order" asc nulls last, created_at desc, id asc
+              limit ${limit} offset ${offset};
+            `
+          : sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where category = ${category} and title ilike ${ilike}
+              order by "order" asc nulls last, created_at asc, id asc
+              limit ${limit} offset ${offset};
+            `;
+      }
+      if (category) {
+        return newest
+          ? sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where category = ${category}
+              order by "order" asc nulls last, created_at desc, id asc
+              limit ${limit} offset ${offset};
+            `
+          : sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where category = ${category}
+              order by "order" asc nulls last, created_at asc, id asc
+              limit ${limit} offset ${offset};
+            `;
+      }
+      if (ilike) {
+        return newest
+          ? sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where title ilike ${ilike}
+              order by "order" asc nulls last, created_at desc, id asc
+              limit ${limit} offset ${offset};
+            `
+          : sql`
+              select id, title, description, image, image_alt, category, address, created_at, "order"
+              from portfolio_items
+              where title ilike ${ilike}
+              order by "order" asc nulls last, created_at asc, id asc
+              limit ${limit} offset ${offset};
+            `;
+      }
+      return newest
+        ? sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            order by "order" asc nulls last, created_at desc, id asc
+            limit ${limit} offset ${offset};
+          `
+        : sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            order by "order" asc nulls last, created_at asc, id asc
+            limit ${limit} offset ${offset};
+          `;
+    }
+
+    if (category && ilike) {
+      return newest
+        ? sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where category = ${category} and title ilike ${ilike}
+            order by "order" asc nulls last, created_at desc, id asc;
+          `
+        : sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where category = ${category} and title ilike ${ilike}
+            order by "order" asc nulls last, created_at asc, id asc;
+          `;
+    }
+    if (category) {
+      return newest
+        ? sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where category = ${category}
+            order by "order" asc nulls last, created_at desc, id asc;
+          `
+        : sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where category = ${category}
+            order by "order" asc nulls last, created_at asc, id asc;
+          `;
+    }
+    if (ilike) {
+      return newest
+        ? sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where title ilike ${ilike}
+            order by "order" asc nulls last, created_at desc, id asc;
+          `
+        : sql`
+            select id, title, description, image, image_alt, category, address, created_at, "order"
+            from portfolio_items
+            where title ilike ${ilike}
+            order by "order" asc nulls last, created_at asc, id asc;
+          `;
+    }
+    return newest
+      ? sql`
+          select id, title, description, image, image_alt, category, address, created_at, "order"
+          from portfolio_items
+          order by "order" asc nulls last, created_at desc, id asc;
+        `
+      : sql`
+          select id, title, description, image, image_alt, category, address, created_at, "order"
+          from portfolio_items
+          order by "order" asc nulls last, created_at asc, id asc;
+        `;
+  })();
+
+  const rows = await rowsRes;
+  return { items: rows.rows.map(rowToItem), total };
 }
 
 export async function getPortfolioItem(id: string): Promise<PortfolioItem | null> {
-  const data = await readPortfolioAsync();
-  return data.items.find((i) => i.id === id) ?? null;
+  await ensurePortfolioSchema();
+  const r = await sql`
+    select id, title, description, image, image_alt, category, address, created_at, "order"
+    from portfolio_items
+    where id = ${id}
+    limit 1;
+  `;
+  const row = r.rows[0];
+  return row ? rowToItem(row) : null;
 }
 
 export async function writePortfolioItems(items: PortfolioItem[]): Promise<void> {
-  await writePortfolioItemsAsync(items);
+  await ensurePortfolioSchema();
+  await sql`begin;`;
+  try {
+    await sql`delete from portfolio_items;`;
+    for (const item of items) {
+      await sql`
+        insert into portfolio_items
+          (id, title, description, image, image_alt, category, address, created_at, "order")
+        values
+          (
+            ${item.id},
+            ${item.title},
+            ${item.description},
+            ${item.image},
+            ${item.imageAlt ?? null},
+            ${item.category},
+            ${item.address ?? null},
+            ${item.createdAt}::timestamptz,
+            ${item.order ?? null}
+          );
+      `;
+    }
+    await sql`commit;`;
+  } catch (e) {
+    await sql`rollback;`;
+    throw e;
+  }
 }
 
 /** 해당 카테고리 내 표시 순서를 orderedIds 순서로 저장 */
@@ -128,11 +264,26 @@ export async function reorderPortfolioItems(
   category: "domestic" | "overseas",
   orderedIds: string[]
 ): Promise<void> {
-  const data = await readPortfolioAsync();
-  const idToOrder = new Map(orderedIds.map((id, i) => [id, i]));
-  const items = data.items.map((item) => {
-    if (item.category !== category) return item;
-    return { ...item, order: idToOrder.get(item.id) ?? 999999 };
-  });
-  await writePortfolioItemsAsync(items);
+  await ensurePortfolioSchema();
+  await sql`begin;`;
+  try {
+    // reset all to bottom, then assign explicit order to provided ids
+    await sql`
+      update portfolio_items
+      set "order" = 999999
+      where category = ${category};
+    `;
+    for (let i = 0; i < orderedIds.length; i += 1) {
+      const id = orderedIds[i];
+      await sql`
+        update portfolio_items
+        set "order" = ${i}
+        where id = ${id} and category = ${category};
+      `;
+    }
+    await sql`commit;`;
+  } catch (e) {
+    await sql`rollback;`;
+    throw e;
+  }
 }
