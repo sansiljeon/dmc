@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   getPortfolioItems,
-  writePortfolioItems,
+  createPortfolioItem,
   type PortfolioItem,
 } from "@/lib/portfolio";
 
@@ -72,6 +72,6 @@ export async function POST(request: NextRequest) {
     createdAt: body.createdAt ?? new Date().toISOString(),
     order: newOrder,
   };
-  await writePortfolioItems([...items, newItem]);
+  await createPortfolioItem(newItem);
   return Response.json(newItem);
 }

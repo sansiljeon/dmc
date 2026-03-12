@@ -41,6 +41,24 @@ async function ensurePortfolioSchema(): Promise<void> {
   await schemaReadyPromise;
 }
 
+async function withPgClient<T>(fn: (client: any) => Promise<T>): Promise<T> {
+  const connect = (sql as any).connect as undefined | (() => Promise<any>);
+  if (!connect) {
+    // Fallback: no explicit client API available; run function with sql proxy.
+    return await fn(sql as any);
+  }
+  const client = await connect();
+  try {
+    return await fn(client);
+  } finally {
+    try {
+      client.release?.();
+    } catch {
+      // ignore
+    }
+  }
+}
+
 function rowToItem(row: any): PortfolioItem {
   return {
     id: String(row.id),
@@ -231,32 +249,34 @@ export async function getPortfolioItem(id: string): Promise<PortfolioItem | null
 
 export async function writePortfolioItems(items: PortfolioItem[]): Promise<void> {
   await ensurePortfolioSchema();
-  await sql`begin;`;
-  try {
-    await sql`delete from portfolio_items;`;
-    for (const item of items) {
-      await sql`
-        insert into portfolio_items
-          (id, title, description, image, image_alt, category, address, created_at, "order")
-        values
-          (
-            ${item.id},
-            ${item.title},
-            ${item.description},
-            ${item.image},
-            ${item.imageAlt ?? null},
-            ${item.category},
-            ${item.address ?? null},
-            ${item.createdAt}::timestamptz,
-            ${item.order ?? null}
-          );
-      `;
+  await withPgClient(async (client) => {
+    await client.sql`begin;`;
+    try {
+      await client.sql`delete from portfolio_items;`;
+      for (const item of items) {
+        await client.sql`
+          insert into portfolio_items
+            (id, title, description, image, image_alt, category, address, created_at, "order")
+          values
+            (
+              ${item.id},
+              ${item.title},
+              ${item.description},
+              ${item.image},
+              ${item.imageAlt ?? null},
+              ${item.category},
+              ${item.address ?? null},
+              ${item.createdAt}::timestamptz,
+              ${item.order ?? null}
+            );
+        `;
+      }
+      await client.sql`commit;`;
+    } catch (e) {
+      await client.sql`rollback;`;
+      throw e;
     }
-    await sql`commit;`;
-  } catch (e) {
-    await sql`rollback;`;
-    throw e;
-  }
+  });
 }
 
 /** 해당 카테고리 내 표시 순서를 orderedIds 순서로 저장 */
@@ -265,25 +285,77 @@ export async function reorderPortfolioItems(
   orderedIds: string[]
 ): Promise<void> {
   await ensurePortfolioSchema();
-  await sql`begin;`;
-  try {
-    // reset all to bottom, then assign explicit order to provided ids
-    await sql`
-      update portfolio_items
-      set "order" = 999999
-      where category = ${category};
-    `;
-    for (let i = 0; i < orderedIds.length; i += 1) {
-      const id = orderedIds[i];
-      await sql`
+  await withPgClient(async (client) => {
+    await client.sql`begin;`;
+    try {
+      // reset all to bottom, then assign explicit order to provided ids
+      await client.sql`
         update portfolio_items
-        set "order" = ${i}
-        where id = ${id} and category = ${category};
+        set "order" = 999999
+        where category = ${category};
       `;
+      for (let i = 0; i < orderedIds.length; i += 1) {
+        const id = orderedIds[i];
+        await client.sql`
+          update portfolio_items
+          set "order" = ${i}
+          where id = ${id} and category = ${category};
+        `;
+      }
+      await client.sql`commit;`;
+    } catch (e) {
+      await client.sql`rollback;`;
+      throw e;
     }
-    await sql`commit;`;
-  } catch (e) {
-    await sql`rollback;`;
-    throw e;
-  }
+  });
+}
+
+export async function createPortfolioItem(item: PortfolioItem): Promise<void> {
+  await ensurePortfolioSchema();
+  await sql`
+    insert into portfolio_items
+      (id, title, description, image, image_alt, category, address, created_at, "order")
+    values
+      (
+        ${item.id},
+        ${item.title},
+        ${item.description},
+        ${item.image},
+        ${item.imageAlt ?? null},
+        ${item.category},
+        ${item.address ?? null},
+        ${item.createdAt}::timestamptz,
+        ${item.order ?? null}
+      );
+  `;
+}
+
+export async function updatePortfolioItem(
+  id: string,
+  patch: Partial<PortfolioItem>
+): Promise<PortfolioItem | null> {
+  await ensurePortfolioSchema();
+  const existing = await getPortfolioItem(id);
+  if (!existing) return null;
+  const merged: PortfolioItem = { ...existing, ...patch, id };
+  await sql`
+    update portfolio_items
+    set
+      title = ${merged.title},
+      description = ${merged.description},
+      image = ${merged.image},
+      image_alt = ${merged.imageAlt ?? null},
+      category = ${merged.category},
+      address = ${merged.address ?? null},
+      created_at = ${merged.createdAt}::timestamptz,
+      "order" = ${merged.order ?? null}
+    where id = ${id};
+  `;
+  return merged;
+}
+
+export async function deletePortfolioItem(id: string): Promise<boolean> {
+  await ensurePortfolioSchema();
+  const r = await sql`delete from portfolio_items where id = ${id};`;
+  return (r as any).rowCount ? (r as any).rowCount > 0 : true;
 }
