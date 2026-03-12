@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const blob = await put(pathname, file, {
       access: "private",
       addRandomSuffix: true,
-    });
+    } as any);
     return Response.json({ url: blob.url });
   } catch (err) {
     console.error("Vercel Blob upload error:", err);

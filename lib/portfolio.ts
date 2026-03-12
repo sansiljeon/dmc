@@ -58,7 +58,7 @@ async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
     await put(BLOB_PORTFOLIO_PATH, payload, {
       access: "private",
       addRandomSuffix: false,
-    });
+    } as any);
     return;
   }
   const dir = path.dirname(portfolioPath);
