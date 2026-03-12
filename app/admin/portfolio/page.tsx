@@ -317,6 +317,9 @@ export default function AdminPortfolioPage() {
                   순서
                 </th>
               )}
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-20">
+                이미지
+              </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                 제목
               </th>
@@ -351,6 +354,18 @@ export default function AdminPortfolioPage() {
                     ⋮⋮
                   </td>
                 )}
+                <td className="px-4 py-3">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt=""
+                      className="w-14 h-14 object-cover rounded border border-gray-200 bg-gray-100"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-xs">없음</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-sm text-main">{item.title}</td>
                 <td className="px-4 py-3 text-sm text-secondary">
                   {item.category === "domestic" ? "국내" : "해외"}

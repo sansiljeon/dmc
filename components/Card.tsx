@@ -44,14 +44,23 @@ export default function Card({
       >
       {image ? (
         <div className="relative h-48 shrink-0 bg-gray-200 overflow-hidden">
-          <Image
-            src={image}
-            alt={imageAlt || title}
-            fill
-            className={imageClass}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            unoptimized={image?.startsWith("/")}
-          />
+          {image.startsWith("http://") || image.startsWith("https://") ? (
+            <img
+              src={image}
+              alt={imageAlt || title}
+              className={`w-full h-full ${imageClass}`}
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <Image
+              src={image}
+              alt={imageAlt || title}
+              fill
+              className={imageClass}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized
+            />
+          )}
         </div>
       ) : (
         <div className="h-48 shrink-0 bg-gray-200 flex items-center justify-center">
