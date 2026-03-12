@@ -57,6 +57,10 @@ export async function POST(request: NextRequest) {
   }
   const body = (await request.json()) as Partial<PortfolioItem>;
   const id = `p-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const minOrder = items.length > 0
+    ? Math.min(...items.map((i) => i.order ?? Infinity))
+    : Infinity;
+  const newOrder = minOrder === Infinity ? 0 : minOrder - 1;
   const newItem: PortfolioItem = {
     id,
     title: body.title ?? "",
@@ -66,6 +70,7 @@ export async function POST(request: NextRequest) {
     category: body.category ?? "domestic",
     address: body.address,
     createdAt: body.createdAt ?? new Date().toISOString(),
+    order: newOrder,
   };
   await writePortfolioItems([...items, newItem]);
   return Response.json(newItem);

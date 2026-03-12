@@ -19,6 +19,9 @@ export interface PortfolioItem {
 const portfolioPath = path.join(process.cwd(), "content/portfolio-items.json");
 const BLOB_PORTFOLIO_PATH = "portfolio-items.json";
 
+/** Blob URL 캐시: list() 생략으로 읽기 1회 절약 (서버리스 인스턴스 내에서만 유효) */
+let cachedBlobUrl: string | null = null;
+
 function readPortfolioSync(): { items: PortfolioItem[] } {
   if (!fs.existsSync(portfolioPath)) {
     return { items: [] };
@@ -31,13 +34,22 @@ function readPortfolioSync(): { items: PortfolioItem[] } {
   }
 }
 
-/** Vercel Blob 또는 로컬 파일에서 포트폴리오 읽기 */
+/** Vercel Blob 또는 로컬 파일에서 포트폴리오 읽기 (캐시된 URL이 있으면 list 생략) */
 async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
-      const { blobs } = await list({ prefix: BLOB_PORTFOLIO_PATH });
+      if (cachedBlobUrl) {
+        const res = await fetch(cachedBlobUrl);
+        if (res.ok) {
+          const data = (await res.json()) as { items: PortfolioItem[] };
+          return Array.isArray(data.items) ? data : { items: [] };
+        }
+        cachedBlobUrl = null;
+      }
+      const { blobs } = await list({ prefix: BLOB_PORTFOLIO_PATH, limit: 5 });
       const blob = blobs.find((b) => b.pathname === BLOB_PORTFOLIO_PATH);
       if (blob?.url) {
+        cachedBlobUrl = blob.url;
         const res = await fetch(blob.url);
         if (res.ok) {
           const data = (await res.json()) as { items: PortfolioItem[] };
@@ -45,20 +57,21 @@ async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
         }
       }
     } catch {
-      // Blob 읽기 실패 시 파일로 폴백
+      cachedBlobUrl = null;
     }
   }
   return readPortfolioSync();
 }
 
-/** Vercel Blob 또는 로컬 파일에 포트폴리오 쓰기 */
+/** Vercel Blob 또는 로컬 파일에 포트폴리오 쓰기 (쓰기 후 URL 캐시 갱신으로 다음 읽기 가속) */
 async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
-  const payload = JSON.stringify({ items }, null, 2);
+  const payload = JSON.stringify({ items });
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    await put(BLOB_PORTFOLIO_PATH, payload, {
+    const result = await put(BLOB_PORTFOLIO_PATH, payload, {
       access: "public",
       addRandomSuffix: false,
     });
+    cachedBlobUrl = result.url;
     return;
   }
   const dir = path.dirname(portfolioPath);
