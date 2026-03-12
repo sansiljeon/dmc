@@ -6,6 +6,9 @@ import CardGrid from "@/components/CardGrid";
 import Card from "@/components/Card";
 import { getPortfolioItems } from "@/lib/portfolio";
 
+/** 관리자에서 추가/삭제한 포트폴리오가 바로 반영되도록 매 요청 시 데이터 조회 */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "해외 포트폴리오 | 대동메디칼컨설팅",
   description: "해외 의료기관 컨설팅 프로젝트 수행 실적입니다.",
