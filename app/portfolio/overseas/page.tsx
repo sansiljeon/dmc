@@ -5,9 +5,12 @@ import Section from "@/components/Section";
 import CardGrid from "@/components/CardGrid";
 import Card from "@/components/Card";
 import { getPortfolioItems } from "@/lib/portfolio";
+import { unstable_noStore as noStore } from "next/cache";
 
 /** 관리자에서 추가/삭제한 포트폴리오가 바로 반영되도록 매 요청 시 데이터 조회 */
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
   title: "해외 포트폴리오 | 대동메디칼컨설팅",
@@ -23,6 +26,7 @@ const subCategories = [
 type Props = { searchParams?: Promise<{ page?: string }> | { page?: string } };
 
 export default async function PortfolioOverseasPage(props: Props) {
+  noStore();
   const searchParams = await Promise.resolve(props.searchParams ?? {});
   const page = Math.max(1, parseInt(String(searchParams?.page ?? "1"), 10) || 1);
   const { items, total } = await getPortfolioItems({

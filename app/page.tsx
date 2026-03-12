@@ -12,9 +12,12 @@ import homeContent from "@/content/pages/home.json";
 import { siteInfo } from "@/content/site";
 import { getPortfolioItems } from "@/lib/portfolio";
 import { getAllNewsPosts } from "@/lib/news";
+import { unstable_noStore as noStore } from "next/cache";
 
 /** 홈의 포트폴리오 미리보기가 관리자 변경을 반영하도록 매 요청 시 데이터 조회 */
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 export const metadata: Metadata = {
   title: "대동메디칼컨설팅 | 의료기관 컨설팅 전문",
@@ -27,6 +30,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  noStore();
   const { items: portfolioItems } = await getPortfolioItems({
     page: 1,
     limit: 6,
