@@ -64,7 +64,7 @@ export default async function Home() {
               key={index}
               title={solution.title}
               description={solution.description}
-              image={solution.image ?? `/images/placeholder/product-${index + 1}.png`}
+              image={`/images/placeholder/product-${index + 1}.png`}
               imageAlt={solution.title}
               imagePosition="top"
               href={solution.href}
