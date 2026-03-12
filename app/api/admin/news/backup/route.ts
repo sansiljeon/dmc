@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     return e as Response;
   }
-  const posts = getAllNewsPosts();
+  const posts = await getAllNewsPosts();
   const json = JSON.stringify({ posts }, null, 2);
   const filename = `news-backup-${new Date().toISOString().slice(0, 10)}.json`;
   return new Response(json, {
@@ -73,11 +73,11 @@ export async function POST(request: NextRequest) {
       content: raw.content ?? "",
     };
     const { slug: postSlug, ...rest } = post;
-    if (getNewsPost(postSlug)) {
-      updateNewsPost(postSlug, post);
+    if (await getNewsPost(postSlug)) {
+      await updateNewsPost(postSlug, post);
       updated += 1;
     } else {
-      createNewsPostWithSlug(postSlug, rest);
+      await createNewsPostWithSlug(postSlug, rest);
       created += 1;
     }
   }

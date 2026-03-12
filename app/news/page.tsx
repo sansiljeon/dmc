@@ -7,13 +7,16 @@ import ScrollAnimation from "@/components/ScrollAnimation";
 import { getAllNewsPosts } from "@/lib/news";
 import newsContent from "@/content/pages/news.json";
 
+/** 관리자에서 추가/수정/삭제한 뉴스가 바로 반영되도록 매 요청 시 데이터 조회 */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "News | 대동메디칼컨설팅",
   description: "의료기관 컨설팅 관련 최신 소식과 인사이트를 확인하세요.",
 };
 
-export default function NewsPage() {
-  const posts = getAllNewsPosts();
+export default async function NewsPage() {
+  const posts = await getAllNewsPosts();
 
   return (
     <>

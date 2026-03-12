@@ -4,23 +4,19 @@ import { notFound } from "next/navigation";
 import { getNewsPost, getAllNewsPosts } from "@/lib/news";
 import { markdownToHtml } from "@/lib/markdown";
 
+/** 관리자에서 추가/수정/삭제한 뉴스가 바로 반영되도록 매 요청 시 데이터 조회 */
+export const dynamic = "force-dynamic";
+
 interface NewsPostPageProps {
   params: {
     slug: string;
   };
 }
 
-export async function generateStaticParams() {
-  const posts = getAllNewsPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: NewsPostPageProps): Promise<Metadata> {
-  const post = getNewsPost(params.slug);
+  const post = await getNewsPost(params.slug);
 
   if (!post) {
     return {
@@ -40,7 +36,7 @@ export async function generateMetadata({
 }
 
 export default async function NewsPostPage({ params }: NewsPostPageProps) {
-  const post = getNewsPost(params.slug);
+  const post = await getNewsPost(params.slug);
 
   if (!post) {
     notFound();

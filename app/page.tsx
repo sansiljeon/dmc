@@ -32,7 +32,7 @@ export default async function Home() {
     limit: 6,
     orderBy: "newest",
   });
-  const allNews = getAllNewsPosts();
+  const allNews = await getAllNewsPosts();
   const latestNews = allNews[0] ?? null;
   const latestNewsDescription = latestNews
     ? latestNews.summary ||

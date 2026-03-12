@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     100,
     Math.max(1, parseInt(searchParams.get("limit") || String(LIMIT), 10))
   );
-  const { posts, total } = getNewsPostsPaginated({ page, limit });
+  const { posts, total } = await getNewsPostsPaginated({ page, limit });
   return Response.json({
     items: posts,
     total,
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return e as Response;
   }
   const body = (await request.json()) as Partial<NewsPost>;
-  const post = createNewsPost({
+  const post = await createNewsPost({
     title: body.title ?? "",
     date: body.date ?? new Date().toISOString().slice(0, 10),
     author: body.author ?? "",

@@ -39,7 +39,7 @@ async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
       if (cachedBlobUrl) {
-        const res = await fetch(cachedBlobUrl);
+        const res = await fetch(cachedBlobUrl, { cache: "no-store" });
         if (res.ok) {
           const data = (await res.json()) as { items: PortfolioItem[] };
           return Array.isArray(data.items) ? data : { items: [] };
@@ -50,7 +50,7 @@ async function readPortfolioAsync(): Promise<{ items: PortfolioItem[] }> {
       const blob = blobs.find((b) => b.pathname === BLOB_PORTFOLIO_PATH);
       if (blob?.url) {
         cachedBlobUrl = blob.url;
-        const res = await fetch(blob.url);
+        const res = await fetch(blob.url, { cache: "no-store" });
         if (res.ok) {
           const data = (await res.json()) as { items: PortfolioItem[] };
           return Array.isArray(data.items) ? data : { items: [] };
@@ -70,6 +70,7 @@ async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
     const result = await put(BLOB_PORTFOLIO_PATH, payload, {
       access: "public",
       addRandomSuffix: false,
+      cacheControlMaxAge: 0,
     });
     cachedBlobUrl = result.url;
     return;

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+import { list, put } from "@vercel/blob";
 
 export interface NewsAttachment {
   url: string;
@@ -22,8 +23,13 @@ export interface NewsPost {
 }
 
 const newsDirectory = path.join(process.cwd(), "content/news");
+const BLOB_NEWS_PATH = "news-posts.json";
 
-export function getAllNewsPosts(): NewsPost[] {
+type NewsStore = { posts: NewsPost[] };
+
+let cachedNewsBlobUrl: string | null = null;
+
+function getAllNewsPostsFromFs(): NewsPost[] {
   if (!fs.existsSync(newsDirectory)) {
     return [];
   }
@@ -60,7 +66,7 @@ export function getAllNewsPosts(): NewsPost[] {
   });
 }
 
-export function getNewsPost(slug: string): NewsPost | null {
+function getNewsPostFromFs(slug: string): NewsPost | null {
   try {
     const fullPath = path.join(newsDirectory, `${slug}.mdx`);
     const fileContents = fs.readFileSync(fullPath, "utf8");
@@ -98,11 +104,68 @@ function parseAttachments(value: unknown): NewsAttachment[] {
   return [];
 }
 
-export function getNewsPostsPaginated(options: {
+async function readNewsStoreFromBlob(): Promise<NewsStore | null> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
+  try {
+    if (cachedNewsBlobUrl) {
+      const res = await fetch(cachedNewsBlobUrl, { cache: "no-store" });
+      if (res.ok) {
+        const data = (await res.json()) as NewsStore;
+        return Array.isArray(data.posts) ? data : { posts: [] };
+      }
+      cachedNewsBlobUrl = null;
+    }
+    const { blobs } = await list({ prefix: BLOB_NEWS_PATH, limit: 5 });
+    const blob = blobs.find((b) => b.pathname === BLOB_NEWS_PATH);
+    if (!blob?.url) return { posts: [] };
+    cachedNewsBlobUrl = blob.url;
+    const res = await fetch(blob.url, { cache: "no-store" });
+    if (!res.ok) return { posts: [] };
+    const data = (await res.json()) as NewsStore;
+    return Array.isArray(data.posts) ? data : { posts: [] };
+  } catch {
+    cachedNewsBlobUrl = null;
+    return null;
+  }
+}
+
+async function writeNewsStoreToBlob(store: NewsStore): Promise<void> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
+  const payload = JSON.stringify(store);
+  const result = await put(BLOB_NEWS_PATH, payload, {
+    access: "public",
+    addRandomSuffix: false,
+    cacheControlMaxAge: 0,
+    contentType: "application/json",
+  });
+  cachedNewsBlobUrl = result.url;
+}
+
+function sortNewsPosts(posts: NewsPost[]): NewsPost[] {
+  return [...posts].sort((a, b) => {
+    if (a.date < b.date) return 1;
+    if (a.date > b.date) return -1;
+    return b.slug.localeCompare(a.slug);
+  });
+}
+
+export async function getAllNewsPosts(): Promise<NewsPost[]> {
+  const blobStore = await readNewsStoreFromBlob();
+  if (blobStore) return sortNewsPosts(blobStore.posts);
+  return getAllNewsPostsFromFs();
+}
+
+export async function getNewsPost(slug: string): Promise<NewsPost | null> {
+  const blobStore = await readNewsStoreFromBlob();
+  if (blobStore) return blobStore.posts.find((p) => p.slug === slug) ?? null;
+  return getNewsPostFromFs(slug);
+}
+
+export async function getNewsPostsPaginated(options: {
   page: number;
   limit: number;
-}): { posts: NewsPost[]; total: number } {
-  const all = getAllNewsPosts();
+}): Promise<{ posts: NewsPost[]; total: number }> {
+  const all = await getAllNewsPosts();
   const total = all.length;
   const start = (options.page - 1) * options.limit;
   const posts = all.slice(start, start + options.limit);
@@ -138,27 +201,71 @@ ${post.content || ""}`;
   fs.writeFileSync(fullPath, frontmatter, "utf8");
 }
 
-export function createNewsPost(post: Omit<NewsPost, "slug">): NewsPost {
+async function readNewsStore(): Promise<NewsStore> {
+  const blobStore = await readNewsStoreFromBlob();
+  if (blobStore) return { posts: Array.isArray(blobStore.posts) ? blobStore.posts : [] };
+  // filesystem fallback (로컬 개발용)
+  return { posts: getAllNewsPostsFromFs() };
+}
+
+async function writeNewsStore(store: NewsStore): Promise<void> {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    await writeNewsStoreToBlob(store);
+    return;
+  }
+  // filesystem fallback은 기존 방식대로 파일 단위로 저장되므로 여기서는 noop
+}
+
+export async function createNewsPost(post: Omit<NewsPost, "slug">): Promise<NewsPost> {
   const slug = slugify(post.title) || `post-${Date.now()}`;
+  const created: NewsPost = { ...post, slug };
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const store = await readNewsStore();
+    const posts = store.posts.filter((p) => p.slug !== slug);
+    posts.push(created);
+    await writeNewsStore({ posts });
+    return created;
+  }
+
   writeNewsPostToFile(slug, post);
-  return { ...post, slug };
+  return created;
 }
 
 /** 백업 복원 시 지정 slug로 뉴스 글 생성 */
-export function createNewsPostWithSlug(slug: string, post: Omit<NewsPost, "slug">): NewsPost {
+export async function createNewsPostWithSlug(slug: string, post: Omit<NewsPost, "slug">): Promise<NewsPost> {
   const safeSlug = slug || slugify(post.title) || `post-${Date.now()}`;
+  const created: NewsPost = { ...post, slug: safeSlug };
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const store = await readNewsStore();
+    const posts = store.posts.filter((p) => p.slug !== safeSlug);
+    posts.push(created);
+    await writeNewsStore({ posts });
+    return created;
+  }
+
   writeNewsPostToFile(safeSlug, post);
-  return { ...post, slug: safeSlug };
+  return created;
 }
 
-export function updateNewsPost(
+export async function updateNewsPost(
   oldSlug: string,
   post: Partial<NewsPost> & { slug?: string }
-): NewsPost {
-  const existing = getNewsPost(oldSlug);
+): Promise<NewsPost> {
+  const existing = await getNewsPost(oldSlug);
   if (!existing) throw new Error("Post not found");
   const slug = post.slug ?? oldSlug;
   const merged = { ...existing, ...post, slug };
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const store = await readNewsStore();
+    const posts = store.posts.filter((p) => p.slug !== oldSlug && p.slug !== slug);
+    posts.push(merged);
+    await writeNewsStore({ posts });
+    return merged;
+  }
+
   if (oldSlug !== slug) {
     const oldPath = path.join(newsDirectory, `${oldSlug}.mdx`);
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -180,7 +287,13 @@ ${merged.content || ""}`;
   return merged;
 }
 
-export function deleteNewsPost(slug: string): void {
+export async function deleteNewsPost(slug: string): Promise<void> {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const store = await readNewsStore();
+    const posts = store.posts.filter((p) => p.slug !== slug);
+    await writeNewsStore({ posts });
+    return;
+  }
   const fullPath = path.join(newsDirectory, `${slug}.mdx`);
   if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
 }
