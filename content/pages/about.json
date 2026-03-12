@@ -1,0 +1,203 @@
+{
+  "hero": {
+    "title": "Medical Total Consulting",
+    "subtitle": "우리의 성공이 곧 고객의 성공이라는 믿음으로\n개원하는 병원이 성공할 수 있도록 최선을 다합니다."
+  },
+  "overview": {
+    "title": "Shaping\nthe healthy future,\ntogether",
+    "description": "DMC는 1991년 설립된 이래로 900개 이상의 병의원을 개원한\nMedical Total One-stop Service로\n대한민국 최고의 병원 컨설팅 업체입니다.",
+    "highlightText": "Medical Total One-stop Service",
+    "stats": [
+      {
+        "value": "900+",
+        "unit": "건",
+        "label": "900여개의 병의원 개원 실적"
+      },
+      {
+        "value": "30+",
+        "unit": "건",
+        "label": "해외 의료기관 컨설팅 경험"
+      },
+      {
+        "value": "30",
+        "unit": "년",
+        "label": "현장에서 컨설팅을 이어온 시간"
+      },
+      {
+        "value": "100+",
+        "unit": "사",
+        "label": "컨설팅 협업 네트워크"
+      }
+    ]
+  },
+  "certifications": {
+    "title": "시간이 증명한 신뢰의 기록",
+    "images": [
+      "/images/certifications/cert-1.png",
+      "/images/certifications/cert-2.png",
+      "/images/certifications/cert-3.png",
+      "/images/certifications/cert-4.png",
+      "/images/certifications/cert-5.png",
+      "/images/certifications/cert-6.png"
+    ]
+  },
+  "services": {
+    "title": "대한민국 최고의 One-Stop 토탈 의료 컨설팅",
+    "description": "DMC는 30년 이상의 경험을 쌓으며 동종업체와는 차별화된\n최고 수준의 Medical Total Consulting을 제공하는 회사로 성장하였습니다.",
+    "items": [
+      {
+        "title": "Operation & Maintenance of medical equipment",
+        "description": "의료기기 책임 관리제로 한번 납품한 장비는 전문 엔지니어에 의해 제품 수명이 다할 때까지 유지 보수"
+      },
+      {
+        "title": "Medical consulting network group",
+        "description": "토탈 의료 컨설팅과 관련된 50개 이상의 업체와 네트워크 그룹으로 형성되어 전문적이고 체계적인 컨설팅"
+      },
+      {
+        "title": "ONE-STOP Service",
+        "description": "다년간의 현장 경험으로부터 쌓은 노하우로 병원의 모든 영역 One-stop Service"
+      },
+      {
+        "title": "글로벌 그룹으로의 도약",
+        "description": "국내에서의 경험을 토대로 세계적인 토탈 의료 컨설팅 업체로 성장"
+      }
+    ]
+  },
+  "history": {
+    "title": "DMC HISTORY",
+    "description": "DMC는 1991년 설립된 이래로 900여개의 병원을 개원한\n대한민국 최고의 컨설팅 업체입니다.",
+    "periods": [
+      {
+        "year": "1991~",
+        "items": [
+          "대동메디칼 설립",
+          "병의원 컨설팅 사업부 신설"
+        ]
+      },
+      {
+        "year": "2000~",
+        "items": [
+          "의료기기 설치 및 A/S협력 자회사 대동메디패스 설립",
+          "윌스기념병원을 포함한 총 250여개의 병원 및 의원 오픈",
+          "북한 평양 대동강구역병원외 현대화 지원사업 컨설팅",
+          "(주)대동메디칼컨설팅 법인전환"
+        ]
+      },
+      {
+        "year": "2010~",
+        "items": [
+          "21세기병원을 포함한 총 400여개의 병원 및 의원 오픈",
+          "우즈베키스탄 현지법인 설립(DMC우즈벡)",
+          "몽골 철도병원 의료장비 컨설팅 및 의료기기 공급",
+          "인천백병원, 양지병원 확장컨설팅 및 의료기기 공급",
+          "골 Grand Med Hospital 컨설팅 및 의료기기 공급",
+          "서울대학교 보건대학원 자문위원 위촉(이건영 대표)",
+          "전주수병원 오픈컨설팅 및 의료기기 공급",
+          "의료장비 및 의료시스템 수출 USD 120만 달러 달성",
+          "예손병원, 성모윌병원, 플러스병원, 든든한병원 외 오픈"
+        ]
+      },
+      {
+        "year": "2016~",
+        "items": [
+          "의료장비 및 의료시스템 수출 UZ 518만 유로 계약",
+          "몽골대학병원 의료장비 및 HIS시스템 컨설팅 MOU",
+          "서울휴병원, 뿌리병원, 지우병원, 청라국제병원 외 오픈",
+          "삼성본병원, 성모윌병원 등을 포함한 총 900개의 병원 및 의원 오픈",
+          "대통령 표창장 수여",
+          "서울시 우수기업 선정",
+          "DECF 베트남 Ben Tre Provincial General hospital 컨설팅 수주",
+          "우즈베키스탄 힘찬병원 의료기기 컨설팅 및 공급",
+          "탄자니아 Chanika Hospital 의료기기 공급",
+          "우즈베키스탄 보건부입찰 참여 및 공급"
+        ]
+      },
+      {
+        "year": "2017~",
+        "items": [
+          "삼성본병원, 성모월병원 등을 포함한 900개의 병원 및 의원 오픈",
+          "대통령 표창장 수여"
+        ]
+      },
+      {
+        "year": "2018~",
+        "items": [
+          "서울시 우수기업 선정"
+        ]
+      },
+      {
+        "year": "2019~",
+        "items": [
+          "EDCF 베트남 Ben Tre Provincial General Hospital 컨설팅 수주",
+          "우즈베키스탄 힘찬병원 의료기기 컨설팅 및 공급",
+          "KOICA 탄자니아 Chanika Hospital 의료기기 공급",
+          "우즈베키스탄 보건부입찰 참여 및 공급"
+        ]
+      },
+      {
+        "year": "2020~",
+        "items": [
+          "우즈베키스탄 보건부입찰 참여 및 공급"
+        ]
+      }
+    ]
+  },
+  "partners": {
+    "title": "협력사",
+    "logos": [
+      "/images/partners/partner-1.png",
+      "/images/partners/partner-2.png",
+      "/images/partners/partner-3.png",
+      "/images/partners/partner-4.png",
+      "/images/partners/partner-5.png",
+      "/images/partners/partner-6.png",
+      "/images/partners/partner-7.png",
+      "/images/partners/partner-8.png",
+      "/images/partners/partner-9.png",
+      "/images/partners/partner-10.png",
+      "/images/partners/partner-11.png",
+      "/images/partners/partner-12.png",
+      "/images/partners/partner-13.png",
+      "/images/partners/partner-14.png",
+      "/images/partners/partner-15.png",
+      "/images/partners/partner-16.png",
+      "/images/partners/partner-17.png",
+      "/images/partners/partner-18.png",
+      "/images/partners/partner-19.png",
+      "/images/partners/partner-20.png",
+      "/images/partners/partner-21.png",
+      "/images/partners/partner-22.png",
+      "/images/partners/partner-23.png",
+      "/images/partners/partner-24.png",
+      "/images/partners/partner-25.png",
+      "/images/partners/partner-26.png",
+      "/images/partners/partner-27.png",
+      "/images/partners/partner-28.png",
+      "/images/partners/partner-29.png",
+      "/images/partners/partner-30.png",
+      "/images/partners/partner-31.png",
+      "/images/partners/partner-32.png",
+      "/images/partners/partner-33.png",
+      "/images/partners/partner-34.png",
+      "/images/partners/partner-35.png",
+      "/images/partners/partner-36.png",
+      "/images/partners/partner-37.png",
+      "/images/partners/partner-38.png",
+      "/images/partners/partner-39.png",
+      "/images/partners/partner-40.png",
+      "/images/partners/partner-41.png",
+      "/images/partners/partner-42.png",
+      "/images/partners/partner-43.png"
+    ]
+  },
+  "sections": [
+    {
+      "title": "비전",
+      "content": "의료기관 컨설팅 분야의 선도 기업으로서, 고객의 성공과 함께 성장하며 의료 산업 발전에 기여하겠습니다."
+    },
+    {
+      "title": "핵심 가치",
+      "content": "전문성, 신뢰성, 혁신을 핵심 가치로 하여 고객에게 최고의 컨설팅 서비스를 제공합니다."
+    }
+  ]
+}

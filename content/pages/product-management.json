@@ -1,0 +1,49 @@
+{
+  "hero": {
+    "title": "관리 컨설팅",
+    "subtitle": "격화되는 경쟁과 환경변화에 적응하며 병원을 생존, 발전시키기 위해서는\n의사가 아니라 경영자가 되어야 합니다."
+  },
+  "gridSections": [
+    {
+      "title": "경영진단 컨설팅",
+      "intro": [
+        "병원 운영을 하다 보면 생각지도 못한 일이 발생하여 난관에 부딪히는 경우가 있습니다.",
+        "특히, 재무 문제나 매출 감소등은 병원 존립에 직접적인 영향을 끼치므로 전문가의 진단이 필요합니다. DMC에서는 전문적인 지식과 능동적인 서비스로 수많은 병원 운영 컨설팅 서비스에 참여하였으며 현재에도 전국 각지의 병원에 서비스를 제공하고 있습니다."
+      ],
+      "steps": [
+        { "label": "컨설팅 의뢰", "emoji": "", "image": "/images/management/step-1.png" },
+        { "label": "병원 진단", "emoji": "", "image": "/images/management/step-2.png" },
+        { "label": "병원진단 결과보고", "emoji": "", "image": "/images/management/step-3.png" },
+        { "label": "솔루션제시", "emoji": "", "image": "/images/management/step-4.png" },
+        { "label": "실행결과보고", "emoji": "", "image": "/images/management/step-5.png" }
+      ]
+    },
+    {
+      "title": "직원관리 컨설팅",
+      "intro": [
+        "개원 후에도 지속적인 인력 충원과 교육을 통하여 병원의 시스템과 문화의 틀을 만들어 경쟁력 있는 병원을 만들 수 있도록 컨설팅 해드립니다.",
+        "또한, 어떤 직장 내에서든 발생할 수 있는 노사 문제에 대해서도 전문가를 통해 해결할 수 있도록 컨설팅해 드립니다."
+      ],
+      "items": [
+        {
+          "title": "헤드헌팅",
+          "description": "병원 확장 또는 의료진의 갑작스런 퇴사등으로 인해 총원이 필요할 때 병원 컨셉에 맞는 의료진을 추천해드립니다.",
+          "image": "/images/management/headhunting-placeholder.png"
+        },
+        {
+          "title": "노무관리",
+          "description": "전문 노사를 통해 사업주 입장에서 고민하는 문제를 노무상담을 통해 인력운영 방안을 제시합니다.",
+          "image": "/images/management/labor-placeholder.png"
+        }
+      ]
+    },
+    {
+      "title": "의료장비 유지보수",
+      "intro": [
+        "대부분 고가인 의료장비는 사용자의 주의 관리 뿐만 아니라 전문가에 의한 유지보수가 중요합니다. DMC는 트렌드에 맞춰 노후화된 장비에 대한 적절한 업그레이드가 이루어질 수 있도록 컨설팅해드립니다.",
+        "디지털화 된 의료장비 사용이 익숙하지 못해 발생할 수 있는 사고를 미연에 방지하기 위하여 의료장비를 공급한 후 전문 엔지니어에 의한 교육이 이루어집니다. 또한 한번 공급한 의료장비에 대해서는 평생 A/S가 이루어지므로 믿고 구매할 수 있습니다."
+      ],
+      "image": "/images/management/equipment-placeholder.png"
+    }
+  ]
+}

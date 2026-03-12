@@ -1,0 +1,194 @@
+{
+  "items": [
+    {
+      "id": "p-1770355379623-ngpb3gv",
+      "title": "뉴고려병원",
+      "description": "",
+      "image": "/images/uploads/1770355379593-owxmom6.png",
+      "category": "domestic",
+      "address": "경기 김포시",
+      "createdAt": "2026-02-06T05:22:59.623Z",
+      "order": 0
+    },
+    {
+      "id": "p-1770355328112-t0sai9t",
+      "title": "원진녹색병원",
+      "description": "",
+      "image": "/images/uploads/1770355328099-g6or4ys.jpg",
+      "category": "domestic",
+      "address": "경기 구리시",
+      "createdAt": "2026-02-06T05:22:08.112Z",
+      "order": 1
+    },
+    {
+      "id": "p-1770355305610-6magko0",
+      "title": "봄여성병원",
+      "description": "",
+      "image": "/images/uploads/1770355305594-bxvvreg.jpg",
+      "category": "domestic",
+      "address": "경기 고양시",
+      "createdAt": "2026-02-06T05:21:45.610Z",
+      "order": 3
+    },
+    {
+      "id": "p-1770355190712-jdsch8z",
+      "title": "뉴민병원",
+      "description": "",
+      "image": "/images/uploads/1770355190687-tqd5qdr.webp",
+      "category": "domestic",
+      "address": "서울 서초구",
+      "createdAt": "2026-02-06T05:19:50.712Z",
+      "order": 4
+    },
+    {
+      "id": "p-1770355165014-vbxlidj",
+      "title": "강서k병원",
+      "description": "",
+      "image": "/images/uploads/1770355164998-p7j8n80.jpg",
+      "category": "domestic",
+      "address": "서울 강서구",
+      "createdAt": "2026-02-06T05:19:25.014Z",
+      "order": 10
+    },
+    {
+      "id": "p-1770355086043-o2smeck",
+      "title": "철원중앙의원",
+      "description": "",
+      "image": "/images/uploads/1770355086026-vekvgap.jpg",
+      "category": "domestic",
+      "address": "강원 철원군",
+      "createdAt": "2026-02-06T05:18:06.043Z",
+      "order": 5
+    },
+    {
+      "id": "p-1770355059918-kglpz3i",
+      "title": "한마음산부인과",
+      "description": "",
+      "image": "/images/uploads/1770355059897-1r2oru6.jpg",
+      "category": "domestic",
+      "address": "충남 서산시",
+      "createdAt": "2026-02-06T05:17:39.918Z",
+      "order": 7
+    },
+    {
+      "id": "p-1770355036030-t9dww9d",
+      "title": "홍익외과",
+      "description": "",
+      "image": "/images/uploads/1770355036011-8gts46i.jpg",
+      "category": "domestic",
+      "address": "충남 당진군",
+      "createdAt": "2026-02-06T05:17:16.030Z",
+      "order": 8
+    },
+    {
+      "id": "p-1770355016856-anqpyp4",
+      "title": "지엔산부인과",
+      "description": "",
+      "image": "/images/uploads/1770355016837-renx2jz.jpg",
+      "category": "domestic",
+      "address": "경기 평택시",
+      "createdAt": "2026-02-06T05:16:56.856Z",
+      "order": 9
+    },
+    {
+      "id": "p-1770354995358-ncwbu5w",
+      "title": "푸름외과",
+      "description": "",
+      "image": "/images/uploads/1770354995338-abso1r2.jpg",
+      "category": "domestic",
+      "address": "서울 노원구",
+      "createdAt": "2026-02-06T05:16:35.358Z",
+      "order": 6
+    },
+    {
+      "id": "p-1770354975644-p3orm6f",
+      "title": "장튼튼내과",
+      "description": "",
+      "image": "/images/uploads/1770354975611-2f1jbrq.jpg",
+      "category": "domestic",
+      "address": "경기 광명시",
+      "createdAt": "2026-02-06T05:16:15.644Z",
+      "order": 11
+    },
+    {
+      "id": "p-1770354961335-z88bu09",
+      "title": "참하지외과",
+      "description": "",
+      "image": "/images/uploads/1770354961266-kpe4aek.jpg",
+      "category": "domestic",
+      "address": "서울 관악구",
+      "createdAt": "2026-02-06T05:16:01.335Z",
+      "order": 12
+    },
+    {
+      "id": "p-1770354923789-awv0mxh",
+      "title": "제이본정형외과의원",
+      "description": "",
+      "image": "/images/uploads/1770354923771-kefwbtq.jpg",
+      "category": "domestic",
+      "address": "서울 양천구",
+      "createdAt": "2026-02-06T05:15:23.789Z",
+      "order": 13
+    },
+    {
+      "id": "p-1770354890987-8aat20b",
+      "title": "서울21세기병원",
+      "description": "",
+      "image": "/images/uploads/1770354890973-gfia9o0.jpg",
+      "category": "domestic",
+      "address": "서울 서초구",
+      "createdAt": "2026-02-06T05:14:50.987Z",
+      "order": 14
+    },
+    {
+      "id": "p-1770354873926-bk2k0du",
+      "title": "치항병원",
+      "description": "",
+      "image": "/images/uploads/1770354873910-4hf4z7y.jpg",
+      "category": "domestic",
+      "address": "경기 안산시",
+      "createdAt": "2026-02-06T05:14:33.926Z",
+      "order": 15
+    },
+    {
+      "id": "p-1770354826599-fj70ej1",
+      "title": "수병원",
+      "description": "",
+      "image": "/images/uploads/1770354826577-bele83f.jpg",
+      "category": "domestic",
+      "address": "전주 완산구",
+      "createdAt": "2026-02-06T05:13:46.599Z",
+      "order": 16
+    },
+    {
+      "id": "p-1770354807701-6mqkolp",
+      "title": "강남지인병원",
+      "description": "",
+      "image": "/images/uploads/1770354807684-9f57ffb.jpg",
+      "category": "domestic",
+      "address": "서울 강남구",
+      "createdAt": "2026-02-06T05:13:27.701Z",
+      "order": 17
+    },
+    {
+      "id": "p-1770354791338-zn948sy",
+      "title": "강남제이에스병원",
+      "description": "",
+      "image": "/images/uploads/1770354791253-qfbul1h.jpg",
+      "category": "domestic",
+      "address": "서울 강남구",
+      "createdAt": "2026-02-06T05:13:11.338Z",
+      "order": 18
+    },
+    {
+      "id": "p-1770355394764-rxw3g4e",
+      "title": "중앙성모병원",
+      "description": "",
+      "image": "/images/uploads/1770355394751-wvpw2ok.jpg",
+      "category": "domestic",
+      "address": "경기 동두천시",
+      "createdAt": "2026-02-06T05:23:14.764Z",
+      "order": 2
+    }
+  ]
+}
