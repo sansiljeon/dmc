@@ -49,12 +49,23 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error("BLOB_READ_WRITE_TOKEN is not set");
+    return Response.json(
+      {
+        error:
+          "파일 업로드에 실패했습니다. Vercel 대시보드 → 프로젝트 → Settings → Environment Variables에서 BLOB_READ_WRITE_TOKEN을 추가하거나, Storage 탭에서 Blob 스토어를 연결해 주세요.",
+      },
+      { status: 503 }
+    );
+  }
+
   const ext = path.extname(file.name) || DEFAULT_EXT[file.type] || ".bin";
   const pathname = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
 
   try {
     const blob = await put(pathname, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: true,
     });
     return Response.json({ url: blob.url });

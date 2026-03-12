@@ -56,7 +56,7 @@ async function writePortfolioItemsAsync(items: PortfolioItem[]): Promise<void> {
   const payload = JSON.stringify({ items }, null, 2);
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     await put(BLOB_PORTFOLIO_PATH, payload, {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
     });
     return;
