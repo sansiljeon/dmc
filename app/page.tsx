@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 export default async function Home() {
   noStore();
   const { items: portfolioItems } = await getPortfolioItems({
+    category: "domestic",
     page: 1,
     limit: 6,
     orderBy: "newest",
