@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingKakaoWidget from "@/components/FloatingKakaoWidget";
@@ -27,6 +28,7 @@ export default function RootLayout({
         <main>{children}</main>
         <Footer />
         <FloatingKakaoWidget />
+        <Analytics />
       </body>
     </html>
   );

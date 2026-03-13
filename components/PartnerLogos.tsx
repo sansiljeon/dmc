@@ -19,17 +19,13 @@ export default function PartnerLogos({ title, logos }: PartnerLogosProps) {
 
   return (
     <div className="w-full overflow-hidden">
-      <div className="flex flex-col -space-y-3 md:-space-y-4">
-        {/* 첫 번째 행 */}
-        <div className="flex gap-4 md:gap-6 lg:gap-8 animate-scroll">
+      <div className="flex flex-col -space-y-2 md:-space-y-3">
+        {/* 첫 번째 행 - 모바일: 한 줄에 6개, PC: 한 줄에 더 많이(작은 비율) */}
+        <div className="flex gap-2 md:gap-3 lg:gap-4 animate-scroll">
           {row1.map((logo, index) => (
             <div
               key={index}
-              className="relative aspect-square flex items-center justify-center p-1 md:p-2 flex-shrink-0"
-              style={{ 
-                width: 'calc((100vw - 2rem) / 6)',
-                minWidth: 'calc((100vw - 2rem) / 6)'
-              }}
+              className="relative aspect-square flex items-center justify-center p-1 flex-shrink-0 w-[calc((100vw-2rem)/6)] md:w-[calc((100vw-2rem)/10)] lg:w-[calc((100vw-3rem)/14)] min-w-[calc((100vw-2rem)/6)] md:min-w-[calc((100vw-2rem)/10)] lg:min-w-[calc((100vw-3rem)/14)]"
             >
               <Image
                 src={logo}
@@ -53,15 +49,11 @@ export default function PartnerLogos({ title, logos }: PartnerLogosProps) {
         </div>
         
         {/* 두 번째 행 */}
-        <div className="flex gap-4 md:gap-6 lg:gap-8 animate-scroll-reverse">
+        <div className="flex gap-2 md:gap-3 lg:gap-4 animate-scroll-reverse">
           {row2.map((logo, index) => (
             <div
               key={index}
-              className="relative aspect-square flex items-center justify-center p-1 md:p-2 flex-shrink-0"
-              style={{ 
-                width: 'calc((100vw - 2rem) / 6)',
-                minWidth: 'calc((100vw - 2rem) / 6)'
-              }}
+              className="relative aspect-square flex items-center justify-center p-1 flex-shrink-0 w-[calc((100vw-2rem)/6)] md:w-[calc((100vw-2rem)/10)] lg:w-[calc((100vw-3rem)/14)] min-w-[calc((100vw-2rem)/6)] md:min-w-[calc((100vw-2rem)/10)] lg:min-w-[calc((100vw-3rem)/14)]"
             >
               <Image
                 src={logo}
@@ -85,15 +77,11 @@ export default function PartnerLogos({ title, logos }: PartnerLogosProps) {
         </div>
         
         {/* 세 번째 행 */}
-        <div className="flex gap-4 md:gap-6 lg:gap-8 animate-scroll">
+        <div className="flex gap-2 md:gap-3 lg:gap-4 animate-scroll">
           {row3.map((logo, index) => (
             <div
               key={index}
-              className="relative aspect-square flex items-center justify-center p-1 md:p-2 flex-shrink-0"
-              style={{ 
-                width: 'calc((100vw - 2rem) / 6)',
-                minWidth: 'calc((100vw - 2rem) / 6)'
-              }}
+              className="relative aspect-square flex items-center justify-center p-1 flex-shrink-0 w-[calc((100vw-2rem)/6)] md:w-[calc((100vw-2rem)/10)] lg:w-[calc((100vw-3rem)/14)] min-w-[calc((100vw-2rem)/6)] md:min-w-[calc((100vw-2rem)/10)] lg:min-w-[calc((100vw-3rem)/14)]"
             >
               <Image
                 src={logo}
