@@ -131,7 +131,7 @@ export const siteInfo = {
   address: "서울시 서초구 서초대로 46길 17, 201호",
   phone: "02-581-2632",
   fax: "0502-581-3600",
-  kakaoLink: "https://pf.kakao.com/_your_channel_id",
+  kakaoLink: "http://pf.kakao.com/_xkbdEn",
   copyright: "© 2026 Daedong Medical Consulting. ALL RIGHT RESERVED.",
 };
 ```
@@ -142,7 +142,7 @@ export const siteInfo = {
 2. `kakaoLink` 값을 실제 카카오톡 채널 링크로 변경합니다:
 
 ```typescript
-kakaoLink: "https://pf.kakao.com/_실제채널ID"
+kakaoLink: "http://pf.kakao.com/_xkbdEn"
 ```
 
 ### 이미지 교체 방법
