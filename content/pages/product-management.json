@@ -11,11 +11,11 @@
         "특히, 재무 문제나 매출 감소등은 병원 존립에 직접적인 영향을 끼치므로 전문가의 진단이 필요합니다. DMC에서는 전문적인 지식과 능동적인 서비스로 수많은 병원 운영 컨설팅 서비스에 참여하였으며 현재에도 전국 각지의 병원에 서비스를 제공하고 있습니다."
       ],
       "steps": [
-        { "label": "컨설팅 의뢰", "emoji": "", "image": "/images/management/step-1.png" },
-        { "label": "병원 진단", "emoji": "", "image": "/images/management/step-2.png" },
-        { "label": "병원진단 결과보고", "emoji": "", "image": "/images/management/step-3.png" },
-        { "label": "솔루션제시", "emoji": "", "image": "/images/management/step-4.png" },
-        { "label": "실행결과보고", "emoji": "", "image": "/images/management/step-5.png" }
+        { "label": "컨설팅 의뢰", "image": "/images/management/step-1.png" },
+        { "label": "병원 진단", "image": "/images/management/step-2.png" },
+        { "label": "병원진단 결과보고", "image": "/images/management/step-3.png" },
+        { "label": "솔루션제시", "image": "/images/management/step-4.png" },
+        { "label": "실행결과보고", "image": "/images/management/step-5.png" }
       ]
     },
     {

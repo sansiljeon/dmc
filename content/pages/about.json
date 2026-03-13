@@ -189,15 +189,5 @@
       "/images/partners/partner-42.png",
       "/images/partners/partner-43.png"
     ]
-  },
-  "sections": [
-    {
-      "title": "비전",
-      "content": "의료기관 컨설팅 분야의 선도 기업으로서, 고객의 성공과 함께 성장하며 의료 산업 발전에 기여하겠습니다."
-    },
-    {
-      "title": "핵심 가치",
-      "content": "전문성, 신뢰성, 혁신을 핵심 가치로 하여 고객에게 최고의 컨설팅 서비스를 제공합니다."
-    }
-  ]
+  }
 }

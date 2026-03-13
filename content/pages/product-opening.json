@@ -93,9 +93,9 @@
       "의료장비는 개원준비 초기부터 진료 계획과 컨셉에 맞는 장비 도입 계획이 수립되어야 잘못된 장비의 도입으로 인한 경제적 손실을 방지할 수 있습니다."
     ],
     "items": [
-      { "title": "합리적인 가격 제시", "description": "", "image": "/images/opening/equip-1.png" },
-      { "title": "병원 컨셉에 맞는 장비 제안", "description": "", "image": "/images/opening/equip-2.png" },
-      { "title": "평생 A/S 보장", "description": "", "image": "/images/opening/equip-3.png" }
+      { "title": "합리적인 가격 제시", "image": "/images/opening/equip-1.png" },
+      { "title": "병원 컨셉에 맞는 장비 제안", "image": "/images/opening/equip-2.png" },
+      { "title": "평생 A/S 보장", "image": "/images/opening/equip-3.png" }
     ]
   },
   "step06Detail": {
@@ -105,8 +105,8 @@
       "전문의료진, 의사, 간호사, 임상병리사, 방사선사, 물리치료사등 병원별 진료 컨셉에 따른 인력 채용에 도움을 드리고 있습니다. 개원 후에도 지속적인 인력 충원과 교육을 통하여 병원의 시스템과 문화의 틀을 만들어 경쟁력 있는 병원을 만들어 가는데 최선을 다하고 있습니다."
     ],
     "items": [
-      { "title": "RECRUITMENT", "description": "" },
-      { "title": "MANAGEMENT", "description": "" }
+      { "title": "RECRUITMENT" },
+      { "title": "MANAGEMENT" }
     ]
   }
 }
