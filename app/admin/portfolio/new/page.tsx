@@ -36,10 +36,6 @@ export default function AdminPortfolioNewPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (imageFiles.length === 0) {
-      alert("이미지를 1장 이상 선택해 주세요.");
-      return;
-    }
     setSaving(true);
     try {
       setUploading(true);
@@ -49,13 +45,13 @@ export default function AdminPortfolioNewPage() {
         urls.push(url);
       }
       setUploading(false);
-      const [image, ...rest] = urls;
+      const [image] = urls;
       const r = await adminFetch("/api/admin/portfolio", {
         method: "POST",
         body: JSON.stringify({
           title: form.title,
           description: "",
-          image,
+          image: image ?? "",
           images: urls.length > 1 ? urls : undefined,
           category: form.category,
           address: form.address || undefined,
@@ -112,7 +108,7 @@ export default function AdminPortfolioNewPage() {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
           <p className="text-xs text-secondary mt-1">
-            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다.
+            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다. 이미지를 추가하지 않으면 카드에 제목이 표시됩니다.
           </p>
           {imageFiles.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">

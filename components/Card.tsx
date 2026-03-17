@@ -63,8 +63,10 @@ export default function Card({
           )}
         </div>
       ) : (
-        <div className="h-48 shrink-0 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-400 text-sm">이미지 없음</span>
+        <div className="h-48 shrink-0 bg-white flex items-center justify-center px-6 text-center border-b border-gray-100">
+          <span className="text-main font-semibold text-lg leading-snug">
+            {title}
+          </span>
         </div>
       )}
       <div className="px-6 pt-6 pb-4 flex-1 flex flex-col">

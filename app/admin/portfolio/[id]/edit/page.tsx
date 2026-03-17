@@ -68,10 +68,6 @@ export default function AdminPortfolioEditPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (images.length === 0) {
-      alert("이미지를 1장 이상 유지해 주세요.");
-      return;
-    }
     setSaving(true);
     try {
       setUploading(true);
@@ -85,11 +81,11 @@ export default function AdminPortfolioEditPage() {
         }
       }
       setUploading(false);
-      const [image, ...rest] = urls;
+      const [image] = urls;
       await adminPut(`/api/admin/portfolio/${encodeURIComponent(id)}`, {
         title: form.title,
         description: "",
-        image,
+        image: image ?? "",
         images: urls.length > 1 ? urls : undefined,
         category: form.category,
         address: form.address || undefined,
@@ -156,7 +152,7 @@ export default function AdminPortfolioEditPage() {
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
           <p className="text-xs text-secondary mt-1">
-            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다.
+            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다. 모두 제거하면 카드에 제목이 표시됩니다.
           </p>
           {images.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
