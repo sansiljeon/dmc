@@ -8,7 +8,7 @@ import type { PortfolioItem } from "@/lib/portfolio";
 
 interface PortfolioGridWithLightboxProps {
   items: PortfolioItem[];
-  columns?: number;
+  columns?: 1 | 2 | 3 | 4;
   className?: string;
   staggerDelay?: number;
   duration?: number;
