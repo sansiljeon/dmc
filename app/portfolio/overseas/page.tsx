@@ -70,6 +70,7 @@ export default async function PortfolioOverseasPage(props: Props) {
                 key={item.id}
                 title={item.title}
                 description={item.description}
+                address={item.address}
                 image={item.image}
                 imageAlt={item.imageAlt || item.title}
               />

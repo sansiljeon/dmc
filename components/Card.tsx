@@ -8,7 +8,7 @@ import ScrollAnimation from "./ScrollAnimation";
 interface CardProps {
   title: string;
   description?: string;
-  /** 국내 포트폴리오 등: 주소 (서울·광역시·특별시는 시+구·군·동, 이외는 도+시·군) */
+  /** 국내: 주소 / 해외: 지역 (병원명 아래 표시) */
   address?: string;
   image?: string;
   imageAlt?: string;

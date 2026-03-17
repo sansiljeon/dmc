@@ -7,7 +7,7 @@ export interface PortfolioItem {
   image: string;
   imageAlt?: string;
   category: "domestic" | "overseas";
-  /** 국내: 주소 표기. 서울·광역시·특별시는 시+구·군·동, 이외는 도+시·군 (예: 서울 강남구, 경기 성남시) */
+  /** 국내: 주소 (예: 서울 강남구). 해외: 지역 (예: 몽골 울란바토르) */
   address?: string;
   createdAt: string;
   /** 표시 순서 (작을수록 먼저). 없으면 createdAt 기준 */

@@ -51,7 +51,7 @@ export default function AdminPortfolioEditPage() {
         description: "",
         image: imageUrl,
         category: form.category,
-        address: form.category === "domestic" ? form.address : undefined,
+        address: form.address || undefined,
       });
       router.push("/admin/portfolio");
     } catch (err) {
@@ -142,25 +142,29 @@ export default function AdminPortfolioEditPage() {
             <option value="overseas">해외</option>
           </select>
         </div>
-        {form.category === "domestic" && (
-          <div>
-            <label className="block text-sm font-medium text-main mb-1">
-              주소 (국내)
-            </label>
-            <input
-              type="text"
-              value={form.address}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, address: e.target.value }))
-              }
-              placeholder="예: 서울 강남구, 경기 성남시"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
+        <div>
+          <label className="block text-sm font-medium text-main mb-1">
+            {form.category === "domestic" ? "주소 (국내)" : "지역 (해외)"}
+          </label>
+          <input
+            type="text"
+            value={form.address}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, address: e.target.value }))
+            }
+            placeholder={
+              form.category === "domestic"
+                ? "예: 서울 강남구, 경기 성남시"
+                : "예: 몽골 울란바토르, 베트남 벤째"
+            }
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+          {form.category === "domestic" && (
             <p className="text-xs text-secondary mt-1">
               서울·광역시·특별시: 시+구·군·동 / 그 외: 도+시·군
             </p>
-          </div>
-        )}
+          )}
+        </div>
         <div className="flex gap-3">
           <button
             type="submit"
