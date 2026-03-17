@@ -63,7 +63,7 @@ export default function Card({
           )}
         </div>
       ) : (
-        <div className="h-48 shrink-0 bg-white flex items-center justify-center px-6 text-center border-b border-gray-100">
+        <div className="h-48 shrink-0 bg-gray-100 flex items-center justify-center px-6 text-center border-b border-gray-200">
           <span className="text-main font-semibold text-lg leading-snug">
             {title}
           </span>
