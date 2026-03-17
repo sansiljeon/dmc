@@ -110,7 +110,7 @@ export default function ImageLightbox({
         <div className="flex flex-col items-center w-full flex-1 min-h-0 overflow-hidden">
           {/* 제목 */}
           {title && (
-            <h3 className="text-white text-lg font-semibold mb-4 text-center px-12">
+            <h3 className="text-white text-lg font-semibold mb-2 text-center px-12">
               {title}
             </h3>
           )}
@@ -126,7 +126,7 @@ export default function ImageLightbox({
           </div>
 
           {/* 하단 미리보기 */}
-          <div className="mt-4 w-full">
+          <div className="mt-2 w-full">
             <div className="flex gap-2 overflow-x-auto pb-2 max-w-full justify-center">
               {images.map((img, i) => (
                 <button
