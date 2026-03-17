@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ImageLightboxProps {
   images: string[];
@@ -46,22 +47,30 @@ export default function ImageLightbox({
 
   const currentImage = images[currentIndex];
 
-  return (
+  const lightbox = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8"
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
       role="dialog"
       aria-modal="true"
       aria-label="이미지 슬라이드"
     >
-      {/* 어두운 반투명 배경 */}
+      {/* 어두운 반투명 배경 - 뷰포트 전체 */}
       <div
         className="absolute inset-0 bg-black/80"
+        style={{ top: 0, left: 0, right: 0, bottom: 0 }}
         onClick={onClose}
         aria-hidden
       />
 
-      {/* 슬라이드 영역 */}
-      <div className="relative z-10 w-full max-w-5xl h-full max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
+      {/* 슬라이드 영역 - 뷰포트 기준 중앙, 높이 제한 */}
+      <div
+        className="relative z-10 w-full max-w-5xl flex flex-col overflow-hidden"
+        style={{
+          maxHeight: "calc(100vh - 2rem)",
+          height: "calc(100vh - 2rem)",
+        }}
+      >
         {/* 좌측 화살표 */}
         <button
           type="button"
@@ -98,7 +107,7 @@ export default function ImageLightbox({
           </svg>
         </button>
 
-        <div className="flex flex-col items-center w-full h-full min-h-0">
+        <div className="flex flex-col items-center w-full flex-1 min-h-0 overflow-hidden">
           {/* 제목 */}
           {title && (
             <h3 className="text-white text-lg font-semibold mb-4 text-center px-12">
@@ -144,4 +153,9 @@ export default function ImageLightbox({
       </div>
     </div>
   );
+
+  if (typeof document !== "undefined") {
+    return createPortal(lightbox, document.body);
+  }
+  return lightbox;
 }
