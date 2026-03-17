@@ -48,7 +48,7 @@ export default function ImageLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
       role="dialog"
       aria-modal="true"
       aria-label="이미지 슬라이드"
@@ -61,7 +61,7 @@ export default function ImageLightbox({
       />
 
       {/* 슬라이드 영역 */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-5xl max-h-[90vh] px-4">
+      <div className="relative z-10 w-full max-w-5xl h-full max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
         {/* 좌측 화살표 */}
         <button
           type="button"
@@ -98,40 +98,48 @@ export default function ImageLightbox({
           </svg>
         </button>
 
-        {/* 제목 */}
-        {title && (
-          <h3 className="text-white text-lg font-semibold mb-4 text-center">{title}</h3>
-        )}
+        <div className="flex flex-col items-center w-full h-full min-h-0">
+          {/* 제목 */}
+          {title && (
+            <h3 className="text-white text-lg font-semibold mb-4 text-center px-12">
+              {title}
+            </h3>
+          )}
 
-        {/* 메인 이미지 */}
-        <div className="relative flex-1 flex items-center justify-center w-full max-h-[70vh]">
-          <img
-            src={currentImage}
-            alt={`${title} ${currentIndex + 1} / ${images.length}`}
-            className="max-w-full max-h-[70vh] object-contain rounded-lg"
-            referrerPolicy="no-referrer"
-          />
-        </div>
+          {/* 메인 이미지 */}
+          <div className="flex-1 min-h-0 flex items-center justify-center w-full">
+            <img
+              src={currentImage}
+              alt={`${title ?? ""} ${currentIndex + 1} / ${images.length}`}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              referrerPolicy="no-referrer"
+            />
+          </div>
 
-        {/* 하단 미리보기 */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-2 max-w-full justify-center">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setCurrentIndex(i)}
-              className={`shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-colors ${
-                i === currentIndex ? "border-point ring-2 ring-point/50" : "border-gray-500/50 hover:border-gray-400"
-              }`}
-            >
-              <img
-                src={img}
-                alt=""
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </button>
-          ))}
+          {/* 하단 미리보기 */}
+          <div className="mt-4 w-full">
+            <div className="flex gap-2 overflow-x-auto pb-2 max-w-full justify-center">
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setCurrentIndex(i)}
+                  className={`shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-colors ${
+                    i === currentIndex
+                      ? "border-point ring-2 ring-point/50"
+                      : "border-gray-500/50 hover:border-gray-400"
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
