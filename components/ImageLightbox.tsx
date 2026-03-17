@@ -67,8 +67,7 @@ export default function ImageLightbox({
       <div
         className="relative z-10 w-full max-w-5xl flex flex-col overflow-hidden"
         style={{
-          maxHeight: "calc(100vh - 2rem)",
-          height: "calc(100vh - 2rem)",
+          maxHeight: "calc(100dvh - 2rem)",
         }}
       >
         {/* 좌측 화살표 */}
@@ -107,26 +106,26 @@ export default function ImageLightbox({
           </svg>
         </button>
 
-        <div className="flex flex-col items-center w-full flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col items-center w-full min-h-0 overflow-hidden gap-2">
           {/* 제목 */}
           {title && (
-            <h3 className="text-white text-lg font-semibold mb-2 text-center px-12">
+            <h3 className="text-white text-lg font-semibold text-center px-12">
               {title}
             </h3>
           )}
 
           {/* 메인 이미지 */}
-          <div className="flex-1 min-h-0 flex items-center justify-center w-full">
+          <div className="min-h-0 flex items-center justify-center w-full">
             <img
               src={currentImage}
               alt={`${title ?? ""} ${currentIndex + 1} / ${images.length}`}
-              className="max-w-full max-h-full object-contain rounded-lg"
+              className="max-w-full max-h-[70dvh] object-contain rounded-lg"
               referrerPolicy="no-referrer"
             />
           </div>
 
           {/* 하단 미리보기 */}
-          <div className="mt-2 w-full">
+          <div className="w-full">
             <div className="flex gap-2 overflow-x-auto pb-2 max-w-full justify-center">
               {images.map((img, i) => (
                 <button
