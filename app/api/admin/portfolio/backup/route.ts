@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
     title: x.title,
     description: x.description,
     image: x.image,
+    images: (x as PortfolioItem).images,
     imageAlt: x.imageAlt,
     category: x.category,
     address: x.address,

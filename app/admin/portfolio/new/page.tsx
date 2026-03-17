@@ -5,6 +5,8 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { adminFetch, adminUpload } from "@/lib/admin-api";
 
+const MAX_IMAGES = 10;
+
 export default function AdminPortfolioNewPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -15,25 +17,46 @@ export default function AdminPortfolioNewPage() {
     category: "domestic" as "domestic" | "overseas",
     address: "",
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  const addImages = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files).filter(
+      (f) => f.type.startsWith("image/")
+    );
+    setImageFiles((prev) => {
+      const combined = [...prev, ...newFiles];
+      return combined.slice(0, MAX_IMAGES);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) {
-      alert("이미지를 선택해 주세요.");
+    if (imageFiles.length === 0) {
+      alert("이미지를 1장 이상 선택해 주세요.");
       return;
     }
     setSaving(true);
     try {
       setUploading(true);
-      const { url } = await adminUpload(imageFile);
+      const urls: string[] = [];
+      for (const file of imageFiles) {
+        const { url } = await adminUpload(file);
+        urls.push(url);
+      }
       setUploading(false);
+      const [image, ...rest] = urls;
       const r = await adminFetch("/api/admin/portfolio", {
         method: "POST",
         body: JSON.stringify({
           title: form.title,
           description: "",
-          image: url,
+          image,
+          images: urls.length > 1 ? urls : undefined,
           category: form.category,
           address: form.address || undefined,
         }),
@@ -78,20 +101,46 @@ export default function AdminPortfolioNewPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-main mb-1">
-            이미지 *
+            이미지 * (최대 {MAX_IMAGES}장)
           </label>
           <input
             ref={fileInputRef}
             type="file"
-            required
             accept="image/jpeg,image/png,image/gif,image/webp"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={(e) => addImages(e.target.files)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
-          {imageFile && (
-            <p className="text-xs text-secondary mt-1">
-              선택: {imageFile.name} (저장 시 업로드됩니다)
-            </p>
+          <p className="text-xs text-secondary mt-1">
+            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다.
+          </p>
+          {imageFiles.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {imageFiles.map((file, i) => (
+                <div
+                  key={i}
+                  className="relative group"
+                >
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt=""
+                    className="w-20 h-20 object-cover rounded border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                  {i === 0 && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-0.5">
+                      대표
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
         <div>

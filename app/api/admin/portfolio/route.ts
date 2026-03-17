@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     title: body.title ?? "",
     description: body.description ?? "",
     image: body.image ?? "",
+    images: body.images,
     imageAlt: body.imageAlt,
     category: body.category ?? "domestic",
     address: body.address,

@@ -5,6 +5,10 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { adminGet, adminPut, adminUpload } from "@/lib/admin-api";
 
+const MAX_IMAGES = 10;
+
+type ImageItem = string | File;
+
 export default function AdminPortfolioEditPage() {
   const router = useRouter();
   const params = useParams();
@@ -15,41 +19,78 @@ export default function AdminPortfolioEditPage() {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     title: "",
-    image: "",
     category: "domestic" as "domestic" | "overseas",
     address: "",
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [images, setImages] = useState<ImageItem[]>([]);
 
   useEffect(() => {
     adminGet(`/api/admin/portfolio/${encodeURIComponent(id)}`)
-      .then((data: { title: string; image: string; category: "domestic" | "overseas"; address?: string }) =>
-        setForm({
-          title: data.title,
-          image: data.image ?? "",
-          category: data.category,
-          address: data.address ?? "",
-        })
+      .then(
+        (data: {
+          title: string;
+          image: string;
+          images?: string[];
+          category: "domestic" | "overseas";
+          address?: string;
+        }) => {
+          setForm({
+            title: data.title,
+            category: data.category,
+            address: data.address ?? "",
+          });
+          const imgs = data.images?.length
+            ? data.images
+            : data.image
+              ? [data.image]
+              : [];
+          setImages(imgs);
+        }
       )
-      .catch(() => setForm((f) => f))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
 
+  const addImages = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files).filter(
+      (f) => f.type.startsWith("image/")
+    );
+    setImages((prev) => {
+      const combined = [...prev, ...newFiles];
+      return combined.slice(0, MAX_IMAGES);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (images.length === 0) {
+      alert("이미지를 1장 이상 유지해 주세요.");
+      return;
+    }
     setSaving(true);
     try {
-      let imageUrl = form.image;
-      if (imageFile) {
-        setUploading(true);
-        const { url } = await adminUpload(imageFile);
-        imageUrl = url;
-        setUploading(false);
+      setUploading(true);
+      const urls: string[] = [];
+      for (const item of images) {
+        if (typeof item === "string") {
+          urls.push(item);
+        } else {
+          const { url } = await adminUpload(item);
+          urls.push(url);
+        }
       }
+      setUploading(false);
+      const [image, ...rest] = urls;
       await adminPut(`/api/admin/portfolio/${encodeURIComponent(id)}`, {
         title: form.title,
         description: "",
-        image: imageUrl,
+        image,
+        images: urls.length > 1 ? urls : undefined,
         category: form.category,
         address: form.address || undefined,
       });
@@ -104,24 +145,48 @@ export default function AdminPortfolioEditPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-main mb-1">
-            이미지
+            이미지 * (최대 {MAX_IMAGES}장)
           </label>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/gif,image/webp"
-            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={(e) => addImages(e.target.files)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
-          {form.image && !imageFile && (
-            <p className="text-xs text-secondary mt-1">
-              현재 이미지: {form.image}
-            </p>
-          )}
-          {imageFile && (
-            <p className="text-xs text-secondary mt-1">
-              새로 선택: {imageFile.name} (저장 시 업로드됩니다)
-            </p>
+          <p className="text-xs text-secondary mt-1">
+            첫 번째 이미지가 대표 이미지(썸네일)로 사용됩니다.
+          </p>
+          {images.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {images.map((item, i) => (
+                <div key={i} className="relative group">
+                  <img
+                    src={
+                      typeof item === "string"
+                        ? item
+                        : URL.createObjectURL(item)
+                    }
+                    alt=""
+                    className="w-20 h-20 object-cover rounded border border-gray-200"
+                    referrerPolicy="no-referrer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                  {i === 0 && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-0.5">
+                      대표
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
         <div>

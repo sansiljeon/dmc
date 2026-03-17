@@ -2,8 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import Section from "@/components/Section";
-import CardGrid from "@/components/CardGrid";
-import Card from "@/components/Card";
+import PortfolioGridWithLightbox from "@/components/PortfolioGridWithLightbox";
 import { getPortfolioItems } from "@/lib/portfolio";
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -63,24 +62,19 @@ export default async function PortfolioDomesticPage(props: Props) {
           </table>
         </div>
 
-        <CardGrid columns={3} className="max-md:grid-cols-2" staggerDelay={50} duration={350}>
-          {items.length > 0 ? (
-            items.map((item) => (
-              <Card
-                key={item.id}
-                title={item.title}
-                description={item.description}
-                address={item.address}
-                image={item.image}
-                imageAlt={item.imageAlt || item.title}
-              />
-            ))
-          ) : (
-            <p className="text-secondary col-span-full text-center py-8">
-              등록된 국내 프로젝트가 없습니다.
-            </p>
-          )}
-        </CardGrid>
+        {items.length > 0 ? (
+          <PortfolioGridWithLightbox
+            items={items}
+            columns={3}
+            className="max-md:grid-cols-2"
+            staggerDelay={50}
+            duration={350}
+          />
+        ) : (
+          <p className="text-secondary col-span-full text-center py-8">
+            등록된 국내 프로젝트가 없습니다.
+          </p>
+        )}
 
         {totalPages > 1 && (
           <nav className="flex justify-center gap-2 mt-12 flex-wrap" aria-label="페이지 이동">

@@ -5,6 +5,8 @@ export interface PortfolioItem {
   title: string;
   description: string;
   image: string;
+  /** 추가 이미지 (최대 10장). image는 대표 이미지(썸네일) */
+  images?: string[];
   imageAlt?: string;
   category: "domestic" | "overseas";
   /** 국내: 주소 (예: 서울 강남구). 해외: 지역 (예: 몽골 울란바토르) */
@@ -36,6 +38,7 @@ async function ensurePortfolioSchema(): Promise<void> {
         create index if not exists portfolio_items_category_order_idx
           on portfolio_items (category, "order" nulls last, created_at desc);
       `;
+      await sql`ALTER TABLE portfolio_items ADD COLUMN IF NOT EXISTS images text`;
     })();
   }
   await schemaReadyPromise;
@@ -59,12 +62,29 @@ async function withPgClient<T>(fn: (client: any) => Promise<T>): Promise<T> {
   }
 }
 
+function parseImages(val: unknown): string[] | undefined {
+  if (Array.isArray(val)) return val.filter((x) => typeof x === "string");
+  if (typeof val === "string") {
+    try {
+      const arr = JSON.parse(val) as unknown;
+      return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 function rowToItem(row: any): PortfolioItem {
+  const image = String(row.image ?? "");
+  const imagesRaw = parseImages(row.images);
+  const images = imagesRaw && imagesRaw.length > 0 ? imagesRaw : undefined;
   return {
     id: String(row.id),
     title: String(row.title ?? ""),
     description: String(row.description ?? ""),
-    image: String(row.image ?? ""),
+    image,
+    images,
     imageAlt: row.image_alt ?? undefined,
     category: row.category as "domestic" | "overseas",
     address: row.address ?? undefined,
@@ -110,14 +130,14 @@ export async function getPortfolioItems(options?: {
       if (category && ilike) {
         return newest
           ? sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where category = ${category} and title ilike ${ilike}
               order by "order" asc nulls last, created_at desc, id asc
               limit ${limit} offset ${offset};
             `
           : sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where category = ${category} and title ilike ${ilike}
               order by "order" asc nulls last, created_at asc, id asc
@@ -127,14 +147,14 @@ export async function getPortfolioItems(options?: {
       if (category) {
         return newest
           ? sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where category = ${category}
               order by "order" asc nulls last, created_at desc, id asc
               limit ${limit} offset ${offset};
             `
           : sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where category = ${category}
               order by "order" asc nulls last, created_at asc, id asc
@@ -144,14 +164,14 @@ export async function getPortfolioItems(options?: {
       if (ilike) {
         return newest
           ? sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where title ilike ${ilike}
               order by "order" asc nulls last, created_at desc, id asc
               limit ${limit} offset ${offset};
             `
           : sql`
-              select id, title, description, image, image_alt, category, address, created_at, "order"
+              select id, title, description, image, images, image_alt, category, address, created_at, "order"
               from portfolio_items
               where title ilike ${ilike}
               order by "order" asc nulls last, created_at asc, id asc
@@ -160,13 +180,13 @@ export async function getPortfolioItems(options?: {
       }
       return newest
         ? sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             order by "order" asc nulls last, created_at desc, id asc
             limit ${limit} offset ${offset};
           `
         : sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             order by "order" asc nulls last, created_at asc, id asc
             limit ${limit} offset ${offset};
@@ -176,13 +196,13 @@ export async function getPortfolioItems(options?: {
     if (category && ilike) {
       return newest
         ? sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where category = ${category} and title ilike ${ilike}
             order by "order" asc nulls last, created_at desc, id asc;
           `
         : sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where category = ${category} and title ilike ${ilike}
             order by "order" asc nulls last, created_at asc, id asc;
@@ -191,13 +211,13 @@ export async function getPortfolioItems(options?: {
     if (category) {
       return newest
         ? sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where category = ${category}
             order by "order" asc nulls last, created_at desc, id asc;
           `
         : sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where category = ${category}
             order by "order" asc nulls last, created_at asc, id asc;
@@ -206,13 +226,13 @@ export async function getPortfolioItems(options?: {
     if (ilike) {
       return newest
         ? sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where title ilike ${ilike}
             order by "order" asc nulls last, created_at desc, id asc;
           `
         : sql`
-            select id, title, description, image, image_alt, category, address, created_at, "order"
+            select id, title, description, image, images, image_alt, category, address, created_at, "order"
             from portfolio_items
             where title ilike ${ilike}
             order by "order" asc nulls last, created_at asc, id asc;
@@ -220,12 +240,12 @@ export async function getPortfolioItems(options?: {
     }
     return newest
       ? sql`
-          select id, title, description, image, image_alt, category, address, created_at, "order"
+          select id, title, description, image, images, image_alt, category, address, created_at, "order"
           from portfolio_items
           order by "order" asc nulls last, created_at desc, id asc;
         `
       : sql`
-          select id, title, description, image, image_alt, category, address, created_at, "order"
+          select id, title, description, image, images, image_alt, category, address, created_at, "order"
           from portfolio_items
           order by "order" asc nulls last, created_at asc, id asc;
         `;
@@ -238,7 +258,7 @@ export async function getPortfolioItems(options?: {
 export async function getPortfolioItem(id: string): Promise<PortfolioItem | null> {
   await ensurePortfolioSchema();
   const r = await sql`
-    select id, title, description, image, image_alt, category, address, created_at, "order"
+    select id, title, description, image, images, image_alt, category, address, created_at, "order"
     from portfolio_items
     where id = ${id}
     limit 1;
@@ -254,15 +274,17 @@ export async function writePortfolioItems(items: PortfolioItem[]): Promise<void>
     try {
       await client.sql`delete from portfolio_items;`;
       for (const item of items) {
+        const imagesJson = item.images?.length ? JSON.stringify(item.images) : null;
         await client.sql`
           insert into portfolio_items
-            (id, title, description, image, image_alt, category, address, created_at, "order")
+            (id, title, description, image, images, image_alt, category, address, created_at, "order")
           values
             (
               ${item.id},
               ${item.title},
               ${item.description},
               ${item.image},
+              ${imagesJson},
               ${item.imageAlt ?? null},
               ${item.category},
               ${item.address ?? null},
@@ -312,15 +334,17 @@ export async function reorderPortfolioItems(
 
 export async function createPortfolioItem(item: PortfolioItem): Promise<void> {
   await ensurePortfolioSchema();
+  const imagesJson = item.images?.length ? JSON.stringify(item.images) : null;
   await sql`
     insert into portfolio_items
-      (id, title, description, image, image_alt, category, address, created_at, "order")
+      (id, title, description, image, images, image_alt, category, address, created_at, "order")
     values
       (
         ${item.id},
         ${item.title},
         ${item.description},
         ${item.image},
+        ${imagesJson},
         ${item.imageAlt ?? null},
         ${item.category},
         ${item.address ?? null},
@@ -338,12 +362,15 @@ export async function updatePortfolioItem(
   const existing = await getPortfolioItem(id);
   if (!existing) return null;
   const merged: PortfolioItem = { ...existing, ...patch, id };
+  const imagesToSave = merged.images !== undefined ? merged.images : existing.images;
+  const imagesJson = imagesToSave?.length ? JSON.stringify(imagesToSave) : null;
   await sql`
     update portfolio_items
     set
       title = ${merged.title},
       description = ${merged.description},
       image = ${merged.image},
+      images = ${imagesJson},
       image_alt = ${merged.imageAlt ?? null},
       category = ${merged.category},
       address = ${merged.address ?? null},
