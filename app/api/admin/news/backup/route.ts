@@ -2,9 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   getAllNewsPosts,
-  getNewsPost,
-  updateNewsPost,
-  createNewsPostWithSlug,
+  bulkUpsertNewsPosts,
   type NewsPost,
 } from "@/lib/news";
 
@@ -56,12 +54,11 @@ export async function POST(request: NextRequest) {
   } catch {
     return Response.json({ error: "유효한 JSON 파일이 아닙니다." }, { status: 400 });
   }
-  const posts = Array.isArray(body.posts) ? body.posts : [];
-  let created = 0;
-  let updated = 0;
-  for (const raw of posts) {
+  const rawPosts = Array.isArray(body.posts) ? body.posts : [];
+  const inputs: NewsPost[] = [];
+  for (const raw of rawPosts) {
     if (!isNewsPost(raw)) continue;
-    const post: NewsPost = {
+    inputs.push({
       slug: raw.slug,
       title: raw.title ?? "",
       date: raw.date ?? new Date().toISOString().slice(0, 10),
@@ -71,15 +68,8 @@ export async function POST(request: NextRequest) {
       notice: raw.notice === true,
       attachments: Array.isArray(raw.attachments) ? raw.attachments : [],
       content: raw.content ?? "",
-    };
-    const { slug: postSlug, ...rest } = post;
-    if (await getNewsPost(postSlug)) {
-      await updateNewsPost(postSlug, post);
-      updated += 1;
-    } else {
-      await createNewsPostWithSlug(postSlug, rest);
-      created += 1;
-    }
+    });
   }
+  const { created, updated } = await bulkUpsertNewsPosts(inputs);
   return Response.json({ ok: true, created, updated });
 }

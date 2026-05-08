@@ -29,6 +29,25 @@ type NewsStore = { posts: NewsPost[] };
 
 let cachedNewsBlobUrl: string | null = null;
 
+/**
+ * NewsStore 메모리 캐시.
+ * - 동일 Lambda 인스턴스 내에서 짧은 시간 동안 read를 재사용.
+ * - mutation 발생 시(write) 즉시 새 값으로 교체되어 stale 노출을 막는다.
+ */
+const NEWS_STORE_TTL_MS = 5_000;
+let cachedNewsStore: NewsStore | null = null;
+let cachedNewsStoreExpiresAt = 0;
+
+function setCachedNewsStore(store: NewsStore): void {
+  cachedNewsStore = store;
+  cachedNewsStoreExpiresAt = Date.now() + NEWS_STORE_TTL_MS;
+}
+
+function invalidateCachedNewsStore(): void {
+  cachedNewsStore = null;
+  cachedNewsStoreExpiresAt = 0;
+}
+
 function getAllNewsPostsFromFs(): NewsPost[] {
   if (!fs.existsSync(newsDirectory)) {
     return [];
@@ -106,25 +125,41 @@ function parseAttachments(value: unknown): NewsAttachment[] {
 
 async function readNewsStoreFromBlob(): Promise<NewsStore | null> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
+  if (cachedNewsStore && Date.now() < cachedNewsStoreExpiresAt) {
+    return cachedNewsStore;
+  }
   try {
     if (cachedNewsBlobUrl) {
       const res = await fetch(cachedNewsBlobUrl, { cache: "no-store" });
       if (res.ok) {
         const data = (await res.json()) as NewsStore;
-        return Array.isArray(data.posts) ? data : { posts: [] };
+        const store = Array.isArray(data.posts) ? data : { posts: [] };
+        setCachedNewsStore(store);
+        return store;
       }
       cachedNewsBlobUrl = null;
     }
     const { blobs } = await list({ prefix: BLOB_NEWS_PATH, limit: 5 });
     const blob = blobs.find((b) => b.pathname === BLOB_NEWS_PATH);
-    if (!blob?.url) return { posts: [] };
+    if (!blob?.url) {
+      const empty: NewsStore = { posts: [] };
+      setCachedNewsStore(empty);
+      return empty;
+    }
     cachedNewsBlobUrl = blob.url;
     const res = await fetch(blob.url, { cache: "no-store" });
-    if (!res.ok) return { posts: [] };
+    if (!res.ok) {
+      const empty: NewsStore = { posts: [] };
+      setCachedNewsStore(empty);
+      return empty;
+    }
     const data = (await res.json()) as NewsStore;
-    return Array.isArray(data.posts) ? data : { posts: [] };
+    const store = Array.isArray(data.posts) ? data : { posts: [] };
+    setCachedNewsStore(store);
+    return store;
   } catch {
     cachedNewsBlobUrl = null;
+    invalidateCachedNewsStore();
     return null;
   }
 }
@@ -139,6 +174,7 @@ async function writeNewsStoreToBlob(store: NewsStore): Promise<void> {
     contentType: "application/json",
   });
   cachedNewsBlobUrl = result.url;
+  setCachedNewsStore(store);
 }
 
 function sortNewsPosts(posts: NewsPost[]): NewsPost[] {
@@ -232,39 +268,30 @@ export async function createNewsPost(post: Omit<NewsPost, "slug">): Promise<News
   return created;
 }
 
-/** 백업 복원 시 지정 slug로 뉴스 글 생성 */
-export async function createNewsPostWithSlug(slug: string, post: Omit<NewsPost, "slug">): Promise<NewsPost> {
-  const safeSlug = slug || slugify(post.title) || `post-${Date.now()}`;
-  const created: NewsPost = { ...post, slug: safeSlug };
-
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const store = await readNewsStore();
-    const posts = store.posts.filter((p) => p.slug !== safeSlug);
-    posts.push(created);
-    await writeNewsStore({ posts });
-    return created;
-  }
-
-  writeNewsPostToFile(safeSlug, post);
-  return created;
-}
-
 export async function updateNewsPost(
   oldSlug: string,
   post: Partial<NewsPost> & { slug?: string }
 ): Promise<NewsPost> {
-  const existing = await getNewsPost(oldSlug);
-  if (!existing) throw new Error("Post not found");
-  const slug = post.slug ?? oldSlug;
-  const merged = { ...existing, ...post, slug };
-
   if (process.env.BLOB_READ_WRITE_TOKEN) {
+    // 단일 read → 메모리에서 머지 → 단일 write
     const store = await readNewsStore();
-    const posts = store.posts.filter((p) => p.slug !== oldSlug && p.slug !== slug);
+    const existing = store.posts.find((p) => p.slug === oldSlug);
+    if (!existing) throw new Error("Post not found");
+    const slug = post.slug ?? oldSlug;
+    const merged: NewsPost = { ...existing, ...post, slug };
+    const posts = store.posts.filter(
+      (p) => p.slug !== oldSlug && p.slug !== slug
+    );
     posts.push(merged);
     await writeNewsStore({ posts });
     return merged;
   }
+
+  // 파일시스템 폴백
+  const existing = getNewsPostFromFs(oldSlug);
+  if (!existing) throw new Error("Post not found");
+  const slug = post.slug ?? oldSlug;
+  const merged: NewsPost = { ...existing, ...post, slug };
 
   if (oldSlug !== slug) {
     const oldPath = path.join(newsDirectory, `${oldSlug}.mdx`);
@@ -285,6 +312,49 @@ ${(merged.attachments?.length ?? 0) > 0 ? `attachments: "${attachmentsJson}"` : 
 ${merged.content || ""}`;
   fs.writeFileSync(fullPath, frontmatter, "utf8");
   return merged;
+}
+
+/**
+ * 백업 복원 등에서 다수의 글을 한 번에 업서트하기 위한 함수.
+ * - Blob 사용 시: store를 1회 read, 메모리에서 슬러그 단위 upsert 후 1회 write.
+ * - 파일시스템 폴백: 글마다 파일 단위 write.
+ */
+export async function bulkUpsertNewsPosts(
+  inputs: NewsPost[]
+): Promise<{ created: number; updated: number }> {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const store = await readNewsStore();
+    const map = new Map<string, NewsPost>(
+      store.posts.map((p) => [p.slug, p])
+    );
+    let created = 0;
+    let updated = 0;
+    for (const post of inputs) {
+      if (!post.slug) continue;
+      if (map.has(post.slug)) {
+        updated += 1;
+      } else {
+        created += 1;
+      }
+      map.set(post.slug, post);
+    }
+    const posts = Array.from(map.values());
+    await writeNewsStore({ posts });
+    return { created, updated };
+  }
+
+  // 파일시스템 폴백
+  let created = 0;
+  let updated = 0;
+  for (const post of inputs) {
+    if (!post.slug) continue;
+    const exists = getNewsPostFromFs(post.slug) != null;
+    const { slug, ...rest } = post;
+    writeNewsPostToFile(slug, rest);
+    if (exists) updated += 1;
+    else created += 1;
+  }
+  return { created, updated };
 }
 
 export async function deleteNewsPost(slug: string): Promise<void> {

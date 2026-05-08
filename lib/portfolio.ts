@@ -18,6 +18,58 @@ export interface PortfolioItem {
 
 let schemaReadyPromise: Promise<void> | null = null;
 
+/**
+ * Portfolio 목록 조회 결과의 메모리 캐시.
+ * - 동일 Lambda 인스턴스 내에서 짧은 시간(TTL) 동안 read 결과를 재사용해
+ *   public 페이지 트래픽에서 발생하는 DB 쿼리를 최소화합니다.
+ * - mutation(create/update/delete/reorder/write)이 발생하면 즉시 무효화하여
+ *   stale 데이터가 노출되지 않도록 합니다.
+ * - 캐시는 "읽기 결과의 사본"만 들고 있으며, DB의 실제 데이터에는
+ *   어떤 영향도 주지 않습니다(쓰기는 항상 DB로 직접 진행).
+ */
+const PORTFOLIO_LIST_TTL_MS = 5_000;
+type ListResult = { items: PortfolioItem[]; total: number };
+const listCache = new Map<string, { value: ListResult; expiresAt: number }>();
+
+function makeListCacheKey(options?: {
+  page?: number;
+  limit?: number;
+  category?: "domestic" | "overseas";
+  orderBy?: "newest" | "oldest";
+  search?: string;
+}): string {
+  const o = options ?? {};
+  return JSON.stringify({
+    page: o.page ?? null,
+    limit: o.limit ?? null,
+    category: o.category ?? null,
+    orderBy: o.orderBy ?? "newest",
+    search: o.search?.trim() ? o.search.trim() : null,
+  });
+}
+
+function getCachedList(key: string): ListResult | null {
+  const entry = listCache.get(key);
+  if (!entry) return null;
+  if (Date.now() >= entry.expiresAt) {
+    listCache.delete(key);
+    return null;
+  }
+  return entry.value;
+}
+
+function setCachedList(key: string, value: ListResult): void {
+  listCache.set(key, {
+    value,
+    expiresAt: Date.now() + PORTFOLIO_LIST_TTL_MS,
+  });
+}
+
+/** 모든 portfolio 관련 메모리 캐시 무효화 (mutation 후 호출) */
+export function invalidatePortfolioCache(): void {
+  listCache.clear();
+}
+
 async function ensurePortfolioSchema(): Promise<void> {
   if (!schemaReadyPromise) {
     schemaReadyPromise = (async () => {
@@ -104,6 +156,11 @@ export async function getPortfolioItems(options?: {
   search?: string;
 }): Promise<{ items: PortfolioItem[]; total: number }> {
   await ensurePortfolioSchema();
+
+  const cacheKey = makeListCacheKey(options);
+  const cached = getCachedList(cacheKey);
+  if (cached) return cached;
+
   const page = options?.page;
   const limit = options?.limit;
   const category = options?.category;
@@ -252,7 +309,34 @@ export async function getPortfolioItems(options?: {
   })();
 
   const rows = await rowsRes;
-  return { items: rows.rows.map(rowToItem), total };
+  const result: ListResult = { items: rows.rows.map(rowToItem), total };
+  setCachedList(cacheKey, result);
+  return result;
+}
+
+/**
+ * 작은 통계 조회: 전체 항목 수와 최소 order 값을 반환합니다.
+ * - "새 글 추가 시 minOrder 계산" 같은 용도에서 전체 SELECT 없이 사용 가능.
+ * - 데이터에는 영향 없음(read-only aggregate).
+ */
+export async function getPortfolioStats(): Promise<{
+  total: number;
+  minOrder: number | null;
+}> {
+  await ensurePortfolioSchema();
+  const r = await sql`
+    select count(*)::int as total, min("order")::int as min_order
+    from portfolio_items;
+  `;
+  const row = r.rows[0] ?? {};
+  const total = typeof row.total === "number" ? row.total : 0;
+  const minOrder =
+    row.min_order === null || row.min_order === undefined
+      ? null
+      : typeof row.min_order === "number"
+        ? row.min_order
+        : Number(row.min_order);
+  return { total, minOrder: Number.isFinite(minOrder as number) ? (minOrder as number) : null };
 }
 
 export async function getPortfolioItem(id: string): Promise<PortfolioItem | null> {
@@ -299,6 +383,7 @@ export async function writePortfolioItems(items: PortfolioItem[]): Promise<void>
       throw e;
     }
   });
+  invalidatePortfolioCache();
 }
 
 /** 해당 카테고리 내 표시 순서를 orderedIds 순서로 저장 */
@@ -330,6 +415,7 @@ export async function reorderPortfolioItems(
       throw e;
     }
   });
+  invalidatePortfolioCache();
 }
 
 export async function createPortfolioItem(item: PortfolioItem): Promise<void> {
@@ -352,6 +438,7 @@ export async function createPortfolioItem(item: PortfolioItem): Promise<void> {
         ${item.order ?? null}
       );
   `;
+  invalidatePortfolioCache();
 }
 
 export async function updatePortfolioItem(
@@ -378,11 +465,13 @@ export async function updatePortfolioItem(
       "order" = ${merged.order ?? null}
     where id = ${id};
   `;
+  invalidatePortfolioCache();
   return merged;
 }
 
 export async function deletePortfolioItem(id: string): Promise<boolean> {
   await ensurePortfolioSchema();
   const r = await sql`delete from portfolio_items where id = ${id};`;
+  invalidatePortfolioCache();
   return (r as any).rowCount ? (r as any).rowCount > 0 : true;
 }
